@@ -1,6 +1,5 @@
 import groovy.json.JsonSlurperClassic
 
-
 def askForInput() {
   //TODO: parameters
   def approvalTimeOutMinutes = 30;
@@ -52,9 +51,9 @@ def getCurrentRepo() {
     ).trim()
 }
 
-def getJsonFromProcessedTemplate(sourceRepository) {
+def getJsonFromProcessedTemplate(params, sourceRepository) {
   def output = sh (
-    script: "oc process -f .openshiftio/application.yaml SOURCE_REPOSITORY_URL=${sourceRepository} -o json",
+    script: "oc process -f .openshiftio/application.yaml SUFFIX_NAME=${params.suffix} SOURCE_REPOSITORY_URL=${sourceRepository} -o json",
     returnStdout: true
   ).trim()
   return new groovy.json.JsonSlurperClassic().parseText(output.trim())
@@ -114,26 +113,32 @@ def main(params) {
   currentUser = getCurrentUser()
   currentGitRepo = getCurrentRepo()
 
-  json = getJsonFromProcessedTemplate(currentGitRepo)
+  json = getJsonFromProcessedTemplate(params, currentGitRepo)
   templateDC = getNameFromTemplate(json, "DeploymentConfig")
+  templateService = getNameFromTemplate(json, "Service")
   templateBC = getNameFromTemplate(json, "BuildConfig")
   templateISDest = getNameFromTemplate(json, "ImageStream")
   templateRoute = getNameFromTemplate(json, "Route")
+  commitId = sh(script: 'git rev-parse --short HEAD', returnStdout: true).toString().trim()
 
   stages = params.get('stages', ["run", "stage"])
-
   stage('Processing Template') {
     sh """
        set -u
        set -e
 
+       # Deleting everything cause no resources brah
+       for i in ${currentUser}-{stage,run};do
+          oc delete all --all -n  \$i
+       done
+
        for i in ${currentUser} ${currentUser}-{stage,run};do
-          oc process -f .openshiftio/application.yaml SOURCE_REPOSITORY_URL=${currentGitRepo} | \
+          oc process -f .openshiftio/application.yaml SOURCE_REPOSITORY_REF=${commitId} SUFFIX_NAME=${params.suffix} SOURCE_REPOSITORY_URL=${currentGitRepo} | \
             oc apply -f- -n \$i
        done
 
-       #Remove dc from currentUser
-       oc delete dc ${templateDC} -n ${currentUser}
+       # Remove dc/service from currentUser
+       oc delete dc/${templateDC} service/${templateService} -n ${currentUser}
 
        #TODO(make it smarter)
        for i in ${currentUser}-{stage,run};do
@@ -169,6 +174,9 @@ def call(body) {
   body.resolveStrategy = Closure.DELEGATE_FIRST
   body.delegate = pipelineParams
   body()
+
+
+  pipelineParams["suffix"] = "-osio-${env.BRANCH_NAME}".toLowerCase()
 
   try {
     timeout(time: jobTimeOutHour, unit: 'HOURS') {
