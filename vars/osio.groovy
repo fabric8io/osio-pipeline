@@ -154,7 +154,9 @@ def main(params) {
   if (stages.contains("stage")) {
     stage('Deploy to staging') {
       deployEnvironment("stage", "${currentUser}", "${templateISDest}", "${templateDC}", "${templateRoute}")
-      askForInput()
+      if(stages.contains("run")) {
+        askForInput()
+      }
     }
   }
 
