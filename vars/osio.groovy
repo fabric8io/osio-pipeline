@@ -102,7 +102,9 @@ def getEnvironments(ns) {
 }
 
 def toParamString(templateVars) {
-  return templateVars.each{ v, k -> v + "=" +k }.collect().join(' ')
+  String parameters = ""
+  templateVars.each{ v, k -> parameters = parameters + (v + "=" + k + " ")}
+  return parameters.trim()
 }
 
 
