@@ -1,4 +1,3 @@
-import groovy.json.JsonSlurperClassic
 
 def askForInput() {
   //TODO: parameters
@@ -51,9 +50,11 @@ def getCurrentRepo() {
     ).trim()
 }
 
-def getJsonFromProcessedTemplate(params, sourceRepository) {
+def getJsonFromProcessedTemplate(templateVars) {
+  templateParams = toParamString(templateVars)
+
   def output = sh (
-    script: "oc process -f .openshiftio/application.yaml SUFFIX_NAME=${params.suffix} SOURCE_REPOSITORY_URL=${sourceRepository} -o json",
+    script: "oc process -f .openshiftio/application.yaml ${templateParams} -o json",
     returnStdout: true
   ).trim()
   return new groovy.json.JsonSlurperClassic().parseText(output.trim())
@@ -100,6 +101,10 @@ def getEnvironments(ns) {
   }
 }
 
+def toParamString(templateVars) {
+  return templateVars.each{ v, k -> v + "=" +k }.collect().join(' ')
+}
+
 
 def main(params) {
   checkout scm;
@@ -110,16 +115,18 @@ def main(params) {
     return
   }
 
-  currentUser = getCurrentUser()
-  currentGitRepo = getCurrentRepo()
+  params.templateConfig['SOURCE_REPOSITORY_URL'] = params.templateConfig['SOURCE_REPOSITORY_URL'] ?:  getCurrentRepo()
 
-  json = getJsonFromProcessedTemplate(params, currentGitRepo)
+  json = getJsonFromProcessedTemplate(params.templateConfig)
   templateDC = getNameFromTemplate(json, "DeploymentConfig")
   templateService = getNameFromTemplate(json, "Service")
   templateBC = getNameFromTemplate(json, "BuildConfig")
   templateISDest = getNameFromTemplate(json, "ImageStream")
   templateRoute = getNameFromTemplate(json, "Route")
-  commitId = sh(script: 'git rev-parse --short HEAD', returnStdout: true).toString().trim()
+
+  currentUser = getCurrentUser()
+  params.templateConfig['SOURCE_REPOSITORY_REF'] = sh(script: 'git rev-parse --short HEAD', returnStdout: true).toString().trim()
+  templateParams = toParamString(params.templateConfig)
 
   stages = params.get('stages', ["run", "stage"])
   stage('Processing Template') {
@@ -133,7 +140,7 @@ def main(params) {
        done
 
        for i in ${currentUser} ${currentUser}-{stage,run};do
-          oc process -f .openshiftio/application.yaml SOURCE_REPOSITORY_REF=${commitId} SUFFIX_NAME=${params.suffix} SOURCE_REPOSITORY_URL=${currentGitRepo} | \
+          oc process -f .openshiftio/application.yaml ${templateParams} | \
             oc apply -f- -n \$i
        done
 
@@ -175,8 +182,8 @@ def call(body) {
   body.delegate = pipelineParams
   body()
 
-
-  pipelineParams["suffix"] = "-osio-${env.BRANCH_NAME}".toLowerCase()
+  pipelineParams.templateConfig = pipelineParams.templateConfig ?: [:]
+  pipelineParams.templateConfig["SUFFIX_NAME"] = pipelineParams.templateConfig["SUFFIX_NAME"] ?: "-osio-${env.BRANCH_NAME}".toLowerCase()
 
   try {
     timeout(time: jobTimeOutHour, unit: 'HOURS') {
