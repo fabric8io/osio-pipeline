@@ -13,30 +13,32 @@ def askForInput() {
   }
 }
 
-def deployEnvironment(_environ, user, is, dc, route) {
-  environ = "-"  + _environ
-
+def displayRouteURL(nameSpace, route) {
   try {
-    sh "oc tag -n ${user}${environ} --alias=true ${user}/${is}:latest ${is}:latest"
+    ROUTE_PREVIEW = shWithOutput("oc get route -n ${nameSpace} ${route.metadata.name} --template 'http://{{.spec.host}}'")
+    echo nameSpace.capitalize() + " URL: ${ROUTE_PREVIEW}"
   } catch (err) {
     error "Error running OpenShift command ${err}"
   }
-
-  openshiftDeploy(deploymentConfig: "${dc}", namespace: "${user}" + environ)
-
-  try {
-    ROUTE_PREVIEW = sh (
-      script: "oc get route -n ${user}${environ} ${route} --template 'http://{{.spec.host}}'",
-      returnStdout: true
-    ).trim()
-    echo _environ.capitalize() + " URL: ${ROUTE_PREVIEW}"
-  } catch (err) {
-    error "Error running OpenShift command ${err}"
-  }
-
 }
 
-def getCurrentUser() {
+def tagImageToDeployEnv(deployNameSpace, userNameSpace, is, tag) {
+  try {
+    sh "oc tag -n ${deployNameSpace} --alias=true ${userNameSpace}/${is}:${tag} ${is}:${tag}"
+  } catch (err) {
+    error "Error running OpenShift command ${err}"
+  }
+}
+
+def deployEnvironment(deployNameSpace, dc,  service, route) {
+  ocApplyResource(dc, deployNameSpace)
+  openshiftVerifyDeployment(depCfg: "${dc.metadata.name}", namespace: "${deployNameSpace}")
+  ocApplyResource(service, deployNameSpace)
+  ocApplyResource(route, deployNameSpace)
+  displayRouteURL(deployNameSpace, route)
+}
+
+def getUserNameSpace() {
   return sh (
     script: "oc whoami|sed 's/.*:\\(.*\\)-jenkins:.*/\\1/'",
     returnStdout: true
@@ -50,66 +52,56 @@ def getCurrentRepo() {
     ).trim()
 }
 
-def getJsonFromProcessedTemplate(templateVars) {
-  templateParams = toParamString(templateVars)
-
-  def output = sh (
-    script: "oc process -f .openshiftio/application.yaml ${templateParams} -o json",
-    returnStdout: true
-  ).trim()
-  return new groovy.json.JsonSlurperClassic().parseText(output.trim())
-}
-
-def getNameFromTemplate(json, type) {
-  def r = json.items.findResults { i ->
-    i.kind == type ?
-      i.metadata.name :
-      null
-  }
-  // For ImageStream we need to filter out the runtime stuff
-  if (type == "ImageStream") {
-    r = r.findResults { i ->
-      !i.startsWith("runtime") ?
-      i :
-      null
-    }
-  }
-
-  if (r.size() == 0) {
-    throw new Exception("We didn't find any ${type}")
-  }
-  if (r.size() > 1) {
-    throw new Exception("There should be only one ${type} we have: ${r}")
-  }
-  return r[0]
-}
-
-def getEnvironments(ns) {
-  def environments = [:]
-  output = sh (
-    script: "oc -n ${ns} extract configmap/fabric8-environments --to=-",
-    returnStdout: true
-  ).trim()
-  output.split("\r?\n").each {line ->
-    if (line.startsWith("name:")) {
-      name = line.trim().replace("name: ", "").toLowerCase()
-    }
-    if (line.startsWith("namespace:")) {
-      namespace = line.trim().replace("namespace: ", "")
-      environments[name] = namespace
-    }
-  }
-}
-
 def toParamString(templateVars) {
   String parameters = ""
   templateVars.each{ v, k -> parameters = parameters + (v + "=" + k + " ")}
   return parameters.trim()
 }
 
+def getProcessedTemplate(templateVars) {
+  def resources = [:]
+
+  def templateParams = toParamString(templateVars)
+  def output = sh (
+    script: "oc process -f .openshiftio/application.yaml ${templateParams} -o yaml",
+    returnStdout: true
+  ).trim()
+
+  readYaml(text: output).items.each {
+    r -> resources[r.kind] = r
+  }
+
+  return resources
+}
+
+def shWithOutput(String command) {
+  return sh(
+          script: command,
+          returnStdout: true
+  ).trim()
+}
+
+def ocApplyResource(resource, namespace) {
+  def resourceFile = "/tmp/${namespace}${env.BUILD_NUMBER}${resource.kind}.yaml"
+  writeYaml file: resourceFile, data: resource
+  sh "oc apply -f ${resourceFile} -n ${namespace}"
+}
+
+def createImageStream(imageStream, namespace) {
+  def isName = imageStream.metadata.name
+  def isFound = shWithOutput("oc get is/$isName -n $namespace --ignore-not-found")
+  if (!isFound) {
+    ocApplyResource(imageStream, namespace)
+  }
+}
+
+def buildProject(buildConfig, namespace) {
+  ocApplyResource(buildConfig, namespace)
+  openshiftBuild(buildConfig: "${buildConfig.metadata.name}", showBuildLogs: 'true')
+}
 
 def main(params) {
-  checkout scm;
+  checkout scm
 
   if (!fileExists('.openshiftio/application.yaml')) {
     println("File not found: .openshiftio/application.yaml")
@@ -118,74 +110,50 @@ def main(params) {
   }
 
   params.templateConfig['SOURCE_REPOSITORY_URL'] = params.templateConfig['SOURCE_REPOSITORY_URL'] ?:  getCurrentRepo()
+  params.templateConfig['SOURCE_REPOSITORY_REF'] = shWithOutput("git rev-parse --short HEAD")
+  params.templateConfig["RELEASE_VERSION"] = params.templateConfig["RELEASE_VERSION"] ?: shWithOutput("git rev-list --count HEAD")
 
-  json = getJsonFromProcessedTemplate(params.templateConfig)
-  templateDC = getNameFromTemplate(json, "DeploymentConfig")
-  templateService = getNameFromTemplate(json, "Service")
-  templateBC = getNameFromTemplate(json, "BuildConfig")
-  templateISDest = getNameFromTemplate(json, "ImageStream")
-  templateRoute = getNameFromTemplate(json, "Route")
+  def resources = getProcessedTemplate(params.templateConfig)
+  def imageStreamName = resources.ImageStream.metadata.name
 
-  currentUser = getCurrentUser()
-  params.templateConfig['SOURCE_REPOSITORY_REF'] = sh(script: 'git rev-parse --short HEAD', returnStdout: true).toString().trim()
-  templateParams = toParamString(params.templateConfig)
-
-  stages = params.get('stages', ["run", "stage"])
-  stage('Processing Template') {
-    sh """
-       set -u
-       set -e
-
-       # Deleting everything cause no resources brah
-       for i in ${currentUser}-{stage,run};do
-          oc delete all --all -n  \$i
-       done
-
-       for i in ${currentUser} ${currentUser}-{stage,run};do
-          oc process -f .openshiftio/application.yaml ${templateParams} | \
-            oc apply -f- -n \$i
-       done
-
-       # Remove dc/service from currentUser
-       oc delete dc/${templateDC} service/${templateService} -n ${currentUser}
-
-       #TODO(make it smarter)
-       for i in ${currentUser}-{stage,run};do
-        oc delete bc ${templateBC} -n \$i
-       done
-    """
-  }
+  def tag = params.templateConfig['RELEASE_VERSION']
+  def userNameSpace = getUserNameSpace()
+  def stages = params.get('stages', ["run", "stage"])
 
   stage('Building application') {
-    openshiftBuild(buildConfig: "${templateBC}", showBuildLogs: 'true')
+    createImageStream(resources.ImageStream, userNameSpace)
+    buildProject(resources.BuildConfig, userNameSpace)
   }
 
   if (stages.contains("stage")) {
     stage('Deploy to staging') {
-      deployEnvironment("stage", "${currentUser}", "${templateISDest}", "${templateDC}", "${templateRoute}")
+      def deployNameSpace = userNameSpace + "-" + "stage"
+      tagImageToDeployEnv(deployNameSpace, userNameSpace, imageStreamName, tag)
+      deployEnvironment(deployNameSpace, resources.DeploymentConfig, resources.Service, resources.Route)
       askForInput()
     }
   }
 
   if(stages.contains("run")) {
     stage('Deploy to Prod') {
-      deployEnvironment("run", "${currentUser}", "${templateISDest}", "${templateDC}", "${templateRoute}")
+      def deployNameSpace = userNameSpace + "-" + "run"
+      tagImageToDeployEnv(deployNameSpace, userNameSpace, imageStreamName, tag)
+      deployEnvironment(deployNameSpace, resources.DeploymentConfig, resources.Service, resources.Route)
     }
   }
 }
 
 def call(body) {
-  //TODO: parameters
   def jobTimeOutHour = 1
   def defaultBuilder = 'nodejs'
 
-  def pipelineParams= [:]
+  def pipelineParams = [:]
   body.resolveStrategy = Closure.DELEGATE_FIRST
   body.delegate = pipelineParams
   body()
 
   pipelineParams.templateConfig = pipelineParams.templateConfig ?: [:]
-  pipelineParams.templateConfig["SUFFIX_NAME"] = pipelineParams.templateConfig["SUFFIX_NAME"] ?: "-osio-${env.BRANCH_NAME}".toLowerCase()
+  pipelineParams.templateConfig["SUFFIX_NAME"] = pipelineParams.templateConfig["SUFFIX_NAME"] ?: "-${env.BRANCH_NAME}".toLowerCase()
 
   try {
     timeout(time: jobTimeOutHour, unit: 'HOURS') {
