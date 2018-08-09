@@ -111,6 +111,7 @@ def main(params) {
 
   params.templateConfig['SOURCE_REPOSITORY_URL'] = params.templateConfig['SOURCE_REPOSITORY_URL'] ?:  getCurrentRepo()
   params.templateConfig['SOURCE_REPOSITORY_REF'] = shWithOutput("git rev-parse --short HEAD")
+  params.templateConfig["RELEASE_VERSION"] = params.templateConfig["RELEASE_VERSION"] ?: shWithOutput("git rev-list --count HEAD")
 
   def resources = getProcessedTemplate(params.templateConfig)
   def imageStreamName = resources.ImageStream.metadata.name
