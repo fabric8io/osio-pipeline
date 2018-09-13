@@ -1,7 +1,7 @@
 #!/usr/bin/groovy
 
 import io.openshift.Events
-import io.fabric8.Plugins
+import io.openshift.Plugins
 
 def call(body) {
     node {

@@ -1,8 +1,7 @@
-package io.fabric8
-import io.fabric8.plugins.*
+package io.openshift
+import io.openshift.plugins.*
 
 class Plugins implements Serializable {
-
     static def register() {
       new analytics().register()
     }
