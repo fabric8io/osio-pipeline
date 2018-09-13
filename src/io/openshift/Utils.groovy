@@ -38,6 +38,40 @@ class Utils {
         return oc.getNamespace()
     }
 
+    /**
+    * Returns the id of the build, which consists of the job name,
+    * build number and an optional prefix.
+    * @param jobName  usually env.JOB_NAME
+    * @param buildNum usually env.BUILD_NUMBER
+    * @param prefix   optional prefix to use, default is empty string.
+    * @return
+    */
+    static def buildID(String jobName, String buildNum,  String prefix='') {
+        // job name from the org plugin
+        def repo = repoNameForJob(jobName)
+        if (prefix != '') {
+          prefix = prefix + '_'
+        }
+        return "${prefix}${repo}_${buildNum}".replaceAll('-', '_')
+                  .replaceAll('/', '_')
+                  .replaceAll(' ', '_')
+    }
+
+    // helper to get the repo name from the job name when
+    // using org + branch github plugins
+    static String repoNameForJob(String jobName) {
+        // job name from the org plugin
+        if (jobName.count('/') > 1) {
+            return jobName.substring(jobName.indexOf('/') + 1, jobName.lastIndexOf('/'))
+        }
+        // job name from the branch plugin
+        if (jobName.count('/') > 0) {
+            return jobName.substring(0, jobName.lastIndexOf('/'))
+        }
+        // normal job name
+        return jobName
+    }
+
     static def addAnnotationToBuild(script, annotation, value) {
         def buildName = buildNameForJob(script.env.JOB_NAME, script.env.BUILD_NUMBER)
         if (!isValidBuildName(buildName)) {
