@@ -1,6 +1,4 @@
-#!/usr/bin/groovy
-
-package io.fabric8.plugins
+package io.openshift.plugins
 
 import io.openshift.Events
 
