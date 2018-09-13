@@ -1,5 +1,3 @@
-#!/usr/bin/groovy
-
 import io.openshift.Events
 import io.openshift.Plugins
 

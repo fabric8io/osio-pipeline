@@ -1,4 +1,3 @@
-#!/usr/bin/groovy
 import io.openshift.Utils
 
 def call(Map args = [:], body = null) {

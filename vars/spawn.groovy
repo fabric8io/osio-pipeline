@@ -1,5 +1,3 @@
-#!/usr/bin/groovy
-
 def call(Map args = [:], body = null){
     if (args.commands == null && body == null) {
         error "Please specify either command or body; aborting ..."
