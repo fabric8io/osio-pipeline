@@ -1,7 +1,8 @@
 #!/usr/bin/groovy
+import io.openshift.Utils
 
 def call(Map args = [:], body = null) {
-    def label = buildId(args.name)
+    def label = Utils.buildId(env.JOB_NAME, env.BUILD_NUMBER, prefix: args.name)
 
     podTemplate(
       label: label,
@@ -20,7 +21,6 @@ def call(Map args = [:], body = null) {
         }
       }
     }
-
 }
 
 def volumes() {
