@@ -3,23 +3,23 @@ import io.openshift.Utils
 
 def call(Map args) {
     stage("Build application") {
-        Events.emit("build.start")
         def namespace = args.namespace ?: Utils.usersNamespace()
         def image = config.runtime() ?: 'oc'
 
         def status = ""
-        try {
-          spawn(image: image, version: config.version(), commands: args.commands) {
-            createImageStream(args.app.ImageStream, namespace)
-            buildProject(args.app.BuildConfig, namespace)
-          }
-          status = "pass"
-        } catch (e) {
-            status = "fail"
-            echo "build failed"
-            throw e
-        } finally {
-          Events.emit(["build.end", "build.${status}"], [status: status, namespace: namespace])
+        spawn(image: image, version: config.version(), commands: args.commands) {
+            Events.emit("build.start")
+            try {
+              createImageStream(args.app.ImageStream, namespace)
+              buildProject(args.app.BuildConfig, namespace)
+              status = "pass"
+            } catch (e) {
+              status = "fail"
+              echo "build failed"
+              throw e
+            } finally {
+              Events.emit(["build.end", "build.${status}"], [status: status, namespace: namespace])
+            }
         }
     }
 }
