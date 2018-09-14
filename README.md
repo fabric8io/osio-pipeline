@@ -7,7 +7,7 @@ template file found under `.openshiftio/application.yaml` and deploys it to the
 ```groovy
 
 #!/usr/bin/groovy
-@Library('github.com/sthaha/osio-pipeline@develop')_
+@Library('github.com/sthaha/osio-pipeline@master')_   # bleeding edge version
 
 osio {
     config runtime: 'node'
