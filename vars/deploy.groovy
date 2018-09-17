@@ -4,12 +4,10 @@ def call(Map args = [:]) {
   stage ("Deploy to ${args.env}") {
     if (!args.env) {
       error "Missing manadatory parameter: env"
-      currentBuild.result = 'ABORTED'
     }
 
     if (!args.resources) {
       error "Missing manadatory parameter: resources"
-      currentBuild.result = 'ABORTED'
     }
 
     def required = ['ImageStream', 'DeploymentConfig', 'Service', 'Route', 'tag']
