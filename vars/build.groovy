@@ -15,9 +15,10 @@ def call(Map args) {
       def res = Utils.mergeMaps(args.resources)
 
       def required = ['ImageStream', 'BuildConfig']
-      def missing = required -  res.keySet()
+      def found = res.keySet()
+      def missing = required - found
       if (missing) {
-        error "Missing mandatory build resources params: ${missing.join(', ')}"
+        error "Missing mandatory build resources params: $missing; found: $found"
         currentBuild.result = 'ABORTED'
         return
       }
