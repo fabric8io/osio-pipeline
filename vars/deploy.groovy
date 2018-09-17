@@ -1,29 +1,29 @@
 import io.openshift.Utils;
 
 def call(Map args = [:]) {
+  if (!args.env) {
+    error "Missing manadatory parameter: env"
+  }
+
+  if (!args.resources) {
+    error "Missing manadatory parameter: resources"
+  }
+
+  def required = ['ImageStream', 'DeploymentConfig', 'Service', 'Route', 'tag']
+  // can pass single or multiple maps
+  def res = Utils.mergeMaps(args.resources)
+  def found = res.keySet()
+  def missing = required - found
+  if (missing) {
+    error "Missing mandatory build resources params: $missing; found: $found"
+  }
+
+
+  if (args.approval == 'manual') {
+    askForInput(res.tag, args.env, args.timeout?: 30)
+  }
+
   stage ("Deploy to ${args.env}") {
-    if (!args.env) {
-      error "Missing manadatory parameter: env"
-    }
-
-    if (!args.resources) {
-      error "Missing manadatory parameter: resources"
-    }
-
-    def required = ['ImageStream', 'DeploymentConfig', 'Service', 'Route', 'tag']
-    // can pass single or multiple maps
-    def res = Utils.mergeMaps(args.resources)
-    def found = res.keySet()
-    def missing = required - found
-    if (missing) {
-      error "Missing mandatory build resources params: $missing; found: $found"
-    }
-
-
-    if (args.approval == 'manual') {
-      askForInput(res.tag, args.env, args.timeout?: 30)
-    }
-
     spawn(image: "oc") {
       def userNS = Utils.usersNamespace();
       def deployNS = userNS + "-" + args.env;
