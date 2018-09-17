@@ -23,7 +23,7 @@ def call(Map args = [:]) {
 
 
     if (args.approval == 'manual') {
-      askForInput(rer.tag, args.env, args.timeout?: 30)
+      askForInput(res.tag, args.env, args.timeout?: 30)
     }
 
     spawn(image: "oc") {
