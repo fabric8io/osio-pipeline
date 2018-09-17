@@ -3,13 +3,10 @@ import io.openshift.Utils
 
 def call(Map args) {
     stage("Build application") {
-      def namespace = args.namespace ?: Utils.usersNamespace()
-      def image = config.runtime() ?: 'oc'
-
       if (!args.resources) {
         error "Missing manadatory parameter: resources"
-        currentBuild.result = 'ABORTED'
       }
+
 
       // can pass single or multiple maps
       def res = Utils.mergeMaps(args.resources)
@@ -19,9 +16,10 @@ def call(Map args) {
       def missing = required - found
       if (missing) {
         error "Missing mandatory build resources params: $missing; found: $found"
-        currentBuild.result = 'ABORTED'
-        return
       }
+
+      def namespace = args.namespace ?: Utils.usersNamespace()
+      def image = config.runtime() ?: 'oc'
 
       def status = ""
       spawn(image: image, version: config.version(), commands: args.commands) {
