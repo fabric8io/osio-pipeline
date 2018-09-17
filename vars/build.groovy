@@ -5,15 +5,19 @@ def call(Map args) {
     stage("Build application") {
       def namespace = args.namespace ?: Utils.usersNamespace()
       def image = config.runtime() ?: 'oc'
-      def res = args.resources
-      if (!res) {
+
+      if (!args.resources) {
         error "Missing manadatory parameter: resources"
         currentBuild.result = 'ABORTED'
       }
 
-      if (!res.ImageStream || !res.BuildConfig) {
-        def found = res.keySet().join(', ')
-        error "parameter resources must contain ImageStream and BuildConfig but found: $found"
+      // can pass single or multiple maps
+      def res = Utils.mergeMaps(args.resources)
+
+      def required = ['ImageStream', 'BuildConfig']
+      def missing = required -  res.keySet()
+      if (missing) {
+        error "Missing mandatory build resources params: ${missing.join(', ')}"
         currentBuild.result = 'ABORTED'
         return
       }
