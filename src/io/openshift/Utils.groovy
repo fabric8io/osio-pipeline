@@ -103,7 +103,7 @@ class Utils {
         return build != null
     }
 
-    def mergeMaps(maps) {
+    static def mergeMaps(maps) {
         // make the args into a list
         // merge current with previous; current taking precedence
         [maps].flatten().inject([:]) { acc, x -> acc + x}
