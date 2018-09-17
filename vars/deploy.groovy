@@ -1,20 +1,39 @@
 import io.openshift.Utils;
 
 def call(Map args = [:]) {
-    def userNamespace = Utils.usersNamespace();
-    def deployNamespace = userNamespace + "-" + args.env;
+  if (!args.env) {
+    error "Missing manadatory parameter: env"
+  }
 
-    if (args.approval == 'manual') {
-        askForInput(args.app.tag, args.env, args.timeout?: 30)
+  if (!args.resources) {
+    error "Missing manadatory parameter: resources"
+  }
+
+  def required = ['ImageStream', 'DeploymentConfig', 'Service', 'Route', 'tag']
+  // can pass single or multiple maps
+  def res = Utils.mergeMaps(args.resources)
+  def found = res.keySet()
+  def missing = required - found
+  if (missing) {
+    error "Missing mandatory build resources params: $missing; found: $found"
+  }
+
+
+  if (args.approval == 'manual') {
+    askForInput(res.tag, args.env, args.timeout?: 30)
+  }
+
+  stage ("Deploy to ${args.env}") {
+    spawn(image: "oc") {
+      def userNS = Utils.usersNamespace();
+      def deployNS = userNS + "-" + args.env;
+
+      tagImageToDeployEnv(deployNS, userNS, res.ImageStream, res.tag)
+      def routeUrl = deployEnvironment(deployNS, res.DeploymentConfig, res.Service, res.Route)
+      displayRouteURLOnUI(deployNS, args.env, routeUrl, res.Route, res.tag)
     }
 
-    stage ("Deploy to ${args.env}") {
-      spawn(image: "oc") {
-        tagImageToDeployEnv(deployNamespace, userNamespace, args.app.ImageStream, args.app.tag)
-        def routeUrl = deployEnvironment(deployNamespace, args.app.DeploymentConfig, args.app.Service, args.app.Route)
-        displayRouteURLOnUI(deployNamespace, args.env, routeUrl, args.app.Route, args.app.tag)
-      }
-    }
+  }
 }
 
 def askForInput(String version, String environment, int duration) {
@@ -34,21 +53,21 @@ def askForInput(String version, String environment, int duration) {
     }
 }
 
-def tagImageToDeployEnv(deployNamespace, userNamespace, is, tag) {
+def tagImageToDeployEnv(ns, userNamespace, is, tag) {
     try {
         def imageName = is.metadata.name
-        sh "oc tag -n ${deployNamespace} --alias=true ${userNamespace}/${imageName}:${tag} ${imageName}:${tag}"
+        sh "oc tag -n ${ns} --alias=true ${userNamespace}/${imageName}:${tag} ${imageName}:${tag}"
     } catch (err) {
         error "Error running OpenShift command ${err}"
     }
 }
 
-def deployEnvironment(deployNamespace, dc, service, route) {
-    Utils.ocApply(this, dc, deployNamespace)
-    openshiftVerifyDeployment(depCfg: "${dc.metadata.name}", namespace: "${deployNamespace}")
-    Utils.ocApply(this, service, deployNamespace)
-    Utils.ocApply(this, route, deployNamespace)
-    return displayRouteURL(deployNamespace, route)
+def deployEnvironment(ns, dc, service, route) {
+    Utils.ocApply(this, dc, ns)
+    openshiftVerifyDeployment(depCfg: "${dc.metadata.name}", namespace: "${ns}")
+    Utils.ocApply(this, service, ns)
+    Utils.ocApply(this, route, ns)
+    return displayRouteURL(ns, route)
 
 }
 

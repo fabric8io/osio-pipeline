@@ -3,24 +3,41 @@ import io.openshift.Utils
 
 def call(Map args) {
     stage("Build application") {
-        def namespace = args.namespace ?: Utils.usersNamespace()
-        def image = config.runtime() ?: 'oc'
+      if (!args.resources) {
+        error "Missing manadatory parameter: resources"
+      }
 
-        def status = ""
-        spawn(image: image, version: config.version(), commands: args.commands) {
-            Events.emit("build.start")
-            try {
-              createImageStream(args.app.ImageStream, namespace)
-              buildProject(args.app.BuildConfig, namespace)
-              status = "pass"
-            } catch (e) {
-              status = "fail"
-              echo "build failed"
-              throw e
-            } finally {
-              Events.emit(["build.end", "build.${status}"], [status: status, namespace: namespace])
-            }
+
+      // can pass single or multiple maps
+      def res = Utils.mergeMaps(args.resources)
+
+      def required = ['ImageStream', 'BuildConfig']
+      def found = res.keySet()
+      def missing = required - found
+      if (missing) {
+        error "Missing mandatory build resources params: $missing; found: $found"
+      }
+
+      def namespace = args.namespace ?: Utils.usersNamespace()
+      def image = config.runtime() ?: 'oc'
+
+      def status = ""
+      spawn(image: image, version: config.version(), commands: args.commands) {
+        Events.emit("build.start")
+        try {
+          createImageStream(res.ImageStream, namespace)
+          buildProject(res.BuildConfig, namespace)
+          status = "pass"
+        } catch (e) {
+          status = "fail"
+        } finally {
+          Events.emit(["build.end", "build.${status}"], [status: status, namespace: namespace])
         }
+
+        if (status == 'fail') {
+          error "Build failed"
+        }
+      }
     }
 }
 

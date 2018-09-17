@@ -49,7 +49,7 @@ class Utils {
     static def buildID(String jobName, String buildNum,  String prefix='') {
         // job name from the org plugin
         def repo = repoNameForJob(jobName)
-        if (prefix != '') {
+        if (prefix) {
           prefix = prefix + '_'
         }
         return "${prefix}${repo}_${buildNum}".replaceAll('-', '_')
@@ -102,4 +102,11 @@ class Utils {
         def build = oc.builds().inNamespace(usersNamespace()).withName(buildName).get()
         return build != null
     }
+
+    static def mergeMaps(maps) {
+      // make the args into a list
+      // merge current with previous; current taking precedence
+      [maps].flatten().inject([:]) { acc, x -> acc + x}
+    }
+
 }
