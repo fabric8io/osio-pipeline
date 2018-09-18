@@ -7,24 +7,24 @@ template file found under `.openshiftio/application.yaml` and deploys it to the
 ```groovy
 
 #!/usr/bin/groovy
-@Library('github.com/sthaha/osio-pipeline@master')_   # bleeding edge version
+@Library('github.com/sthaha/osio-pipeline@master')_ 
 
 osio {
     config runtime: 'node'
 
     ci {
-        def app = processTemplate()
-        build app: app
+        def resources = processTemplate()
+        build resources: resources
     }
 
     cd {
-      def app = processTemplate(params: [
+      def resources = processTemplate(params: [
         release_version: "1.0.${env.BUILD_NUMBER}"
       ])
 
-      build app: app
-      deploy app: app, env: 'stage'
-      deploy app: app, env: 'run', approval: 'manual'
+      build resources: resources
+      deploy resources: resources, env: 'stage'
+      deploy resources: resources, env: 'run', approval: 'manual'
     }
 }
 
