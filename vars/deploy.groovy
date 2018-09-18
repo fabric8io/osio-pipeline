@@ -1,4 +1,4 @@
-import io.openshift.Utils;
+import io.openshift.Utils
 
 def call(Map args = [:]) {
   if (!args.env) {
@@ -23,7 +23,6 @@ def call(Map args = [:]) {
     error "Missing manadatory metadata: tag"
   }
 
-
   if (args.approval == 'manual') {
     // Ensure that waiting for approval happen on master so that slave isn't
     // held up waiting for input
@@ -38,9 +37,10 @@ def call(Map args = [:]) {
       def deployNS = userNS + "-" + args.env;
 
       tagImageToDeployEnv(deployNS, userNS, res.ImageStream, tag)
+      applyConfigMap(deployNS, res.ConfigMap)
+      applyRole(deployNS, res.RoleBinding)
       deployEnvironment(deployNS, res.DeploymentConfig, res.Service, res.Route, tag, args.env)
     }
-
   }
 }
 
@@ -79,6 +79,26 @@ def deployEnvironment(ns, dcs, services, routes, version, env) {
   services.each { s -> Utils.ocApply(this, s, ns) }
   routes.each { r -> Utils.ocApply(this, r, ns) }
   annotateRouteURL(ns, env, routes, version)
+}
+
+def applyConfigMap(ns, cms) {
+  if (cm != null) {
+    return
+  }
+
+  cms.each { cm -> Utils.ocApply(this, cm, ns) }
+}
+
+def applyRole(ns, roles) {
+  if (roles != null) {
+    return
+  }
+
+  try {
+    roles.each { r -> Utils.ocApply(this, r, ns) }
+  } catch(err) {
+    echo "error occurred while creatig the role: ${err}"
+  }
 }
 
 def annotateRouteURL(ns, env, routes, version) {
