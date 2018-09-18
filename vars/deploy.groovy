@@ -97,7 +97,7 @@ def applyRole(ns, roles) {
   try {
     roles.each { r -> Utils.ocApply(this, r, ns) }
   } catch(err) {
-    echo "error occurred while creatig the role: ${err}"
+    echo "error occurred while creating the role: ${err}"
   }
 }
 

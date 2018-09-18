@@ -3,7 +3,7 @@ def call(Map args = [:]) {
         error "Missing manadatory parameter: file"
     }
 
-    def resources = readYaml file: args.file
+    def resources = readYaml(file: args.file)
 
     if (resources instanceof LinkedList) {
       return resources.groupBy({ r -> r.kind })
