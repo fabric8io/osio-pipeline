@@ -234,10 +234,9 @@ This is an api to spawn an pod as per requirement and execute the commands in th
 or like
 
 ```groovy
-    spawn (image: 'oc` commands: """
+    spawn image: 'oc` commands: """
               oc version
           """
-    }
 ```
 
 Either one of commands or closure needs to be specified.
