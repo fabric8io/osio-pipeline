@@ -1,0 +1,8 @@
+#!/usr/bin/groovy
+node {
+    def pipelineLibrary = library("github.com/fabric8io/osio-pipeline")
+
+    stage('Test mergeMap with empty map') {
+        assert pipelineLibrary.io.openshift.Utils.mergeMap([:])
+    }
+}
