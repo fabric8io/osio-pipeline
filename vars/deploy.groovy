@@ -20,7 +20,11 @@ def call(Map args = [:]) {
 
 
   if (args.approval == 'manual') {
-    askForInput(res.tag, args.env, args.timeout ?: 30)
+    // Ensure that waiting for approval happen on master so that slave isn't
+    // held up waiting for input
+    stage("Approve") {
+      askForInput(res.tag, args.env, args.timeout ?: 30)
+    }
   }
 
   stage("Deploy to ${args.env}") {
@@ -40,15 +44,13 @@ def askForInput(String version, String environment, int duration) {
   def appEnvironment = environment ? "${environment} environment" : "next environment"
   def proceedMessage = """Would you like to promote ${appVersion} to the ${appEnvironment}?"""
 
-  stage("Approve") {
-    try {
-      timeout(time: duration, unit: 'MINUTES') {
-        input id: 'Proceed', message: "\n${proceedMessage}"
-      }
-    } catch (err) {
-      currentBuild.result = 'ABORTED'
-      error "Timeout of $duration minutes has elapsed; aborting ..."
+  try {
+    timeout(time: duration, unit: 'MINUTES') {
+      input id: 'Proceed', message: "\n${proceedMessage}"
     }
+  } catch (err) {
+    currentBuild.result = 'ABORTED'
+    error "Timeout of $duration minutes has elapsed; aborting ..."
   }
 }
 
@@ -64,7 +66,6 @@ def tagImageToDeployEnv(ns, userNamespace, imageStreams, tag) {
 }
 
 def deployEnvironment(ns, dcs, services, routes, version, env) {
-  def routeURLs = [:]
   dcs.each { dc ->
     Utils.ocApply(this, dc, ns)
     openshiftVerifyDeployment(depCfg: "${dc.metadata.name}", namespace: "${ns}")
@@ -72,49 +73,39 @@ def deployEnvironment(ns, dcs, services, routes, version, env) {
   services.each { s ->
     Utils.ocApply(this, s, ns)
   }
+
+  def routeMap = [:]
   routes.each { r ->
     Utils.ocApply(this, r, ns)
-    routeURLs.put(r.metadata.name, displayRouteURL(ns, r))
+    routeMap[r.metadata.name] = displayRouteURL(ns, r)
   }
 
-  annotateRouteURL(ns, env, routeURLs, version)
-  if (routes.size >1) {
-    echo "UI will display only first route"
-  }
+  annotateRouteURL(ns, env, routeMap, version)
 }
 
-def annotateRouteURL(ns, env, routeURLs, version) {
-  def routeMetadata = """---
+def annotateRouteURL(ns, env, routeMap, version) {
+  def serviceURLs = routeMap.inject(''){ acc, r ->  s + "\n  ${r.key}: ${r.value}"
+  def deploymentVersions = routeMap.inject(''){ acc, r ->  s + "\n  ${r.key}: $version"
+
+  def annotation = """---
 environmentName: "$env"
-serviceUrls: ${createServiceURLs(routeURLs)}
-deploymentVersions: ${createDeploymentVersions(routeURLs, version)}
+serviceUrls: $serviceURLs
+deploymentVersions: $deploymentVersions
 """
-  Utils.addAnnotationToBuild(this, "environment.services.fabric8.io/$ns", routeMetadata);
+  Utils.addAnnotationToBuild(this, "environment.services.fabric8.io/$ns", annotation);
 }
 
 def displayRouteURL(ns, route) {
   try {
-    def routeUrl = Utils.shWithOutput(this, "oc get route -n ${ns} ${route.metadata.name} --template 'http://{{.spec.host}}'")
-    echo ns.capitalize() + " URL: ${routeUrl}"
+    def routeUrl = Utils.shWithOutput(this,
+      "oc get route -n ${ns} ${route.metadata.name} --template 'http://{{.spec.host}}'")
+
+    echo "${ns.capitalize()} URL: ${routeUrl}"
     return routeUrl
+
   } catch (err) {
     error "Error running OpenShift command ${err}"
   }
   return null
 }
 
-def createServiceURLs(routes){
-  def s = ""
-  routes.each { r ->
-    s = s + "\n  ${r.key}: ${r.value}"
-  }
-  return s
-}
-
-def createDeploymentVersions(routes, version){
-  def s = ""
-  routes.each { r ->
-    s = s + "\n  ${r.key}: ${version}"
-  }
-  return s
-}
