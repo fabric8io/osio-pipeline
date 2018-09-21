@@ -9,7 +9,7 @@ def call(Map args = [:]) {
     error "Missing manadatory parameter: resources"
   }
 
-  def required = ['ImageStream', 'DeploymentConfig', 'Service', 'Route', 'tag']
+  def required = ['ImageStream', 'DeploymentConfig', 'Service', 'Route', 'meta']
   // can pass single or multiple maps
   def res = Utils.mergeMaps(args.resources)
   def found = res.keySet()
@@ -18,12 +18,17 @@ def call(Map args = [:]) {
     error "Missing mandatory build resources params: $missing; found: $found"
   }
 
+  def tag = res.meta.tag
+  if (!tag) {
+    error "Missing manadatory metadata: tag"
+  }
+
 
   if (args.approval == 'manual') {
     // Ensure that waiting for approval happen on master so that slave isn't
     // held up waiting for input
     stage("Approve") {
-      askForInput(res.tag, args.env, args.timeout ?: 30)
+      askForInput(tag, args.env, args.timeout ?: 30)
     }
   }
 
@@ -32,8 +37,8 @@ def call(Map args = [:]) {
       def userNS = Utils.usersNamespace();
       def deployNS = userNS + "-" + args.env;
 
-      tagImageToDeployEnv(deployNS, userNS, res.ImageStream, res.tag)
-      deployEnvironment(deployNS, res.DeploymentConfig, res.Service, res.Route, res.tag, args.env)
+      tagImageToDeployEnv(deployNS, userNS, res.ImageStream, tag)
+      deployEnvironment(deployNS, res.DeploymentConfig, res.Service, res.Route, tag, args.env)
     }
 
   }

@@ -133,23 +133,28 @@ Parameters
 
 ### processTemplate
 
-This is the api which is responsible for processing your openshift template. This will traverse through all the resources. Fill the values of all the template parameters provided by you in the argument and return the map of openshift resources.
-
+`processTemplate` runs `oc process` on the OpenShift template pointed by `file`
+parameter and returns a representation of the resources (internals can change
+in future).
+All mandatory parameters required to process the template must be passed in
+as `params`.
 
 ```groovy
-    def resource = processTemplate(file: 'template.yaml', params: [
-            release_version: "1.0.${env.BUILD_NUMBER}"
-    ])
+    def resources = processTemplate(
+      file: 'template.yaml',
+      params: [ release_version: "1.0.${env.BUILD_NUMBER}" ]
+    )
 ```
 
 Parameters
 
-|      Name      |  Required  |         Default Value        |                             Description                                |
-|----------------|------------|------------------------------|------------------------------------------------------------------------|
-|      file      |   false    | .openshiftio/application.yam |         the file which you want to process as openShift template       |
-|     params     |   false    |             null             |   a map which contains the key value pairs of all template parameters  |
+|      Name      |  Required  |         Default Value         |                             Description                 |
+|----------------|------------|-------------------------------|---------------------------------------------------------|
+|      file      |   false    | .openshiftio/application.yaml |   file which you want to process as OpenShift template  |
+|     params     |   false    |             null              |    a map of key value pairs of all template parameters  |
 
-Following template parameters are by default set, you can overide them by passing key value pairs in params.
+Following template parameters must be present in the template and is set to the
+following values by default. You can override them by passing key value pairs in params.
 
 |              Name           |               Default Value              |
 |-----------------------------|------------------------------------------|
@@ -157,8 +162,6 @@ Following template parameters are by default set, you can overide them by passin
 |    SOURCE_REPOSITORY_URL    | output of `git config remote.origin.url` |
 |    SOURCE_REPOSITORY_REF    |  output of `git rev-parse --short HEAD`  |
 |       RELEASE_VERSION       |  output of `git rev-list --count HEAD`   |
-
-`Resource` returned is a map which will contains all objects of template with key `Resource Kind` and value a list of all objects of that kind with one additional key `tag` value equal to `RELEASE_VERSION`
 
 ### build
 

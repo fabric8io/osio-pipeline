@@ -16,9 +16,13 @@ def call(args=[:]) {
     params = applyDefaults(params)
 
     def yaml = Utils.shWithOutput(this, "oc process -f $file ${stringizeParams(params)} -o yaml")
-    def resources = parseTemplate(yaml)
-    resources.tag = params.RELEASE_VERSION
 
+    def kind = { r -> r.kind }
+    def resources = readYaml(text: yaml).items.groupBy(kind)
+
+    // add metadata about the resource that is processed
+    // tag is a special metadata and used to tag IS and else where
+    resources.meta = [tag: params.RELEASE_VERSION]
     return resources
 }
 
@@ -37,6 +41,3 @@ def stringizeParams(Map params) {
     return ret.trim()
 }
 
-def parseTemplate(String yaml) {
-    return readYaml(text: yaml).items.groupBy({ r -> r.kind })
-}
