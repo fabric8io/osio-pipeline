@@ -70,27 +70,20 @@ def deployEnvironment(ns, dcs, services, routes, version, env) {
     Utils.ocApply(this, dc, ns)
     openshiftVerifyDeployment(depCfg: "${dc.metadata.name}", namespace: "${ns}")
   }
-  services.each { s ->
-    Utils.ocApply(this, s, ns)
-  }
 
-  def routeMap = [:]
-  routes.each { r ->
-    Utils.ocApply(this, r, ns)
-    routeMap[r.metadata.name] = displayRouteURL(ns, r)
-  }
-
-  annotateRouteURL(ns, env, routeMap, version)
+  services.each { s -> Utils.ocApply(this, s, ns) }
+  routes.each { r -> Utils.ocApply(this, r, ns) }
+  annotateRouteURL(ns, env, routes, version)
 }
 
-def annotateRouteURL(ns, env, routeMap, version) {
-  def serviceURLs = routeMap.inject(''){ acc, r ->  s + "\n  ${r.key}: ${r.value}"
-  def deploymentVersions = routeMap.inject(''){ acc, r ->  s + "\n  ${r.key}: $version"
+def annotateRouteURL(ns, env, routes, version) {
+  def svcURLs = routes.inject(''){ acc, r -> s + "\n  ${r.metadata.name}: ${displayRouteURL(ns, r)}" }
+  def depVersions = routes.inject(''){ acc, r ->  s + "\n  ${r.metadata.name}: $version"
 
   def annotation = """---
 environmentName: "$env"
-serviceUrls: $serviceURLs
-deploymentVersions: $deploymentVersions
+serviceUrls: $svcURLs
+deploymentVersions: $depVersions
 """
   Utils.addAnnotationToBuild(this, "environment.services.fabric8.io/$ns", annotation);
 }
