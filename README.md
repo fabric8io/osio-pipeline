@@ -158,7 +158,7 @@ Following template parameters are by default set, you can overide them by passin
 |    SOURCE_REPOSITORY_REF    |  output of `git rev-parse --short HEAD`  |
 |       RELEASE_VERSION       |  output of `git rev-list --count HEAD`   |
 
-`Resource` returned is a map which will contains all objects of template with key `Resource Kind` with one additional key `tag` value equal to `RELEASE_VERSION`
+`Resource` returned is a map which will contains all objects of template with key `Resource Kind` and value a list of all objects of that kind with one additional key `tag` value equal to `RELEASE_VERSION`
 
 ### build
 

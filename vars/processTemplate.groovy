@@ -38,13 +38,5 @@ def stringizeParams(Map params) {
 }
 
 def parseTemplate(String yaml) {
-    def resources = [:]
-    readYaml(text: yaml).items.each { r ->
-        if(resources.containsKey(r.kind)) {
-          resources.get(r.kind).add(r)
-        } else {
-          resources.put(r.kind, [r])
-        }
-    }
-    return resources
+    return readYaml(text: yaml).items.groupBy({ r -> r.kind })
 }
