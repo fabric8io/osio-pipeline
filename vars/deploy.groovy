@@ -83,14 +83,14 @@ def deployEnvironment(ns, dcs, services, routes, version, env) {
 
 def annotateRouteURL(ns, env, routes, version) {
   def svcURLs = routes.inject(''){ acc, r -> acc + "\n  ${r.metadata.name}: ${displayRouteURL(ns, r)}" }
-  def depVersions = routes.inject(''){ acc, r ->  acc + "\n  ${r.metadata.name}: $version"
+  def depVersions = routes.inject(''){ acc, r ->  acc + "\n  ${r.metadata.name}: $version" }
 
   def annotation = """---
 environmentName: "$env"
 serviceUrls: $svcURLs
 deploymentVersions: $depVersions
 """
-  Utils.addAnnotationToBuild(this, "environment.services.fabric8.io/$ns", annotation);
+  Utils.addAnnotationToBuild(this, "environment.services.fabric8.io/$ns", annotation)
 }
 
 def displayRouteURL(ns, route) {
