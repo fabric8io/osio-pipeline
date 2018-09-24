@@ -9,8 +9,9 @@ def call(args=[:]) {
   }
 
 
-  def templateParams = readYaml(file: file).parameters*.name ?: []
-  def params = applyDefaults(args.params, templateParams)
+  def parameters = readYaml(file: file).parameters ?: []
+  def paramNames = parameters.collect { it.name }
+  def params = applyDefaults(args.params, paramNames)
 
   def ocParams = params.collect { k,v -> "$k=$v"}.join(' ')
   def processed = Utils.shWithOutput(this, "oc process -f $file $ocParams -o yaml")
