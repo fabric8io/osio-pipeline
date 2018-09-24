@@ -40,6 +40,7 @@ def applyDefaults(provided=[:], templateParams) {
 
   setParam('SUFFIX_NAME') { "-${env.BRANCH_NAME}".toLowerCase() }
   setParam('SOURCE_REPOSITORY_REF') { Utils.shWithOutput(this, "git rev-parse --short HEAD") }
+  setParam('SOURCE_REPOSITORY_URL') { Utils.shWithOutput(this, "git config remote.origin.url") }
   setParam('RELEASE_VERSION') { Utils.shWithOutput(this, "git rev-list --count HEAD") }
   return params
 }
