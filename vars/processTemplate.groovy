@@ -9,15 +9,14 @@ def call(args=[:]) {
   }
 
 
-
   def templateParams = readYaml(file: file).parameters*.name ?: []
   def params = applyDefaults(args.params, templateParams)
 
   def ocParams = params.collect { k,v -> "$k=$v"}.join(' ')
-  def yaml = Utils.shWithOutput(this, "oc process -f $file $ocParams -o yaml")
+  def processed = Utils.shWithOutput(this, "oc process -f $file $ocParams -o yaml")
 
   def kind = { r -> r.kind }
-  def resources = readYaml(text: yaml).items.groupBy(kind)
+  def resources = readYaml(text: processed).items.groupBy(kind)
 
   // add metadata about the resource that is processed
   // tag is a special metadata and used to tag IS and else where
