@@ -11,7 +11,7 @@ def call(Map args = [:]) {
 
   def required = ['ImageStream', 'DeploymentConfig', 'Service', 'Route', 'meta']
   // can pass single or multiple maps
-  def res = Utils.mergeMaps(args.resources)
+  def res = Utils.mergeResources(args.resources)
   def found = res.keySet()
   def missing = required - found
   if (missing) {
