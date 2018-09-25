@@ -163,7 +163,6 @@ following values by default. You can override them by passing key value pairs in
 |    SOURCE_REPOSITORY_REF    |  output of `git rev-parse --short HEAD`  |
 |       RELEASE_VERSION       |  output of `git rev-list --count HEAD`   |
 
-`Resource` returned is a map which will contains all objects of template with key `Resource Kind` with one additional key `tag` value equal to `RELEASE_VERSION`
 
 ### loadResources
 `loadResources` returns a list of OpenShift `resources` read from a yaml file.
@@ -181,7 +180,7 @@ Parameters
 |----------------|------------|------------------------------|------------------------------------------------------------------------|
 |      file      |   true     |  none           |    An relative path of resource yaml file.            |
 
-
+### build
 This is the api which is responsible for doing s2i build, generating image and creating imagestream (if not exist)
 
 ```groovy
