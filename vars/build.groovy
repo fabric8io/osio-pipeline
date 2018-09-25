@@ -9,7 +9,7 @@ def call(Map args) {
 
 
       // can pass single or multiple maps
-      def res = Utils.mergeMaps(args.resources)
+      def res = Utils.mergeResources(args.resources)
 
       def required = ['ImageStream', 'BuildConfig']
       def found = res.keySet()
