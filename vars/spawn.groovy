@@ -7,19 +7,28 @@ def call(Map args = [:], body = null){
 
     def spec = specForImage(args.image, args.version?: 'latest')
     def checkoutScm = args.checkout_scm ?: true
-    pod(name: args.image, image: spec.image, shell: spec.shell) {
-      if (checkoutScm) {
-        checkout scm
-      }
 
-      if (args.commands != null) {
-          sh args.commands
-      }
+    if (args.image == "oc") {
+      executeCode(args, body)
+    } else {
+      pod(name: args.image, image: spec.image, shell: spec.shell) {
+        if (checkoutScm) {
+          checkout scm
+        }
 
-      if (body != null) {
-          body()
+        executeCode(args, body)
       }
     }
+}
+
+def executeCode(args, body) {
+  if (args.commands != null) {
+    sh args.commands
+  }
+
+  if (body != null) {
+    body()
+  }
 }
 
 def specForImage(image, version){
