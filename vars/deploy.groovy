@@ -83,7 +83,7 @@ def deployEnvironment(ns, dcs, services, routes, version, env) {
 }
 
 def applyConfigMap(ns, cms) {
-  if (cms != null) {
+  if (cms == null) {
     return
   }
 
@@ -91,7 +91,7 @@ def applyConfigMap(ns, cms) {
 }
 
 def applyRole(ns, roles) {
-  if (roles != null) {
+  if (roles == null) {
     return
   }
 
