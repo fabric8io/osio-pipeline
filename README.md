@@ -253,5 +253,4 @@ Parameters
 |  checkout_scm  |    false   |      true      |    whether you want git code or not for performing commands    |
 |    commands    |    false   |      null      |             commands that you want to execute                  |
 
-Note: For the `oc` image its doesn't spin up new pod, instead it execute the commands on 
-the master node.
+NOTE: For oc image, as an optimisation, a new pod is not started instead commands and body are executed on master itself

@@ -8,25 +8,27 @@ def call(Map args = [:], body = null){
     def spec = specForImage(args.image, args.version?: 'latest')
     def checkoutScm = args.checkout_scm ?: true
 
+    // oc is available on master so don't spawn unnecessarily
     if (args.image == "oc") {
-      executeCode(args, body)
-    } else {
-      pod(name: args.image, image: spec.image, shell: spec.shell) {
-        if (checkoutScm) {
-          checkout scm
-        }
+      execute(args.commands, body)
+      return
+    }
 
-        executeCode(args, body)
+    pod(name: args.image, image: spec.image, shell: spec.shell) {
+      if (checkoutScm) {
+        checkout scm
       }
+
+      execute(args.commands, body)
     }
 }
 
-def executeCode(args, body) {
-  if (args.commands != null) {
-    sh args.commands
+def execute(commands, body) {
+  if (commands) {
+    sh commands
   }
 
-  if (body != null) {
+  if (body) {
     body()
   }
 }
