@@ -38,7 +38,7 @@ def call(Map args = [:]) {
 
       tagImageToDeployEnv(targetNS, sourceNS, res.ImageStream, tag)
       applyResources(targetNS, res)
-      verifyDeployments(targetNS, args.DeploymentConfig)
+      verifyDeployments(targetNS, res.DeploymentConfig)
       annotateRoutes(targetNS, args.env, res.Route, tag)
     }
   }
@@ -80,7 +80,6 @@ def applyResources(ns, res) {
 }
 
 def verifyDeployments(ns, dcs) {
-  echo "verifying DC ${dcs}"
   dcs.each { dc ->
     openshiftVerifyDeployment(depCfg: "${dc.metadata.name}", namespace: "${ns}")
   }
