@@ -163,8 +163,24 @@ following values by default. You can override them by passing key value pairs in
 |    SOURCE_REPOSITORY_REF    |  output of `git rev-parse --short HEAD`  |
 |       RELEASE_VERSION       |  output of `git rev-list --count HEAD`   |
 
-### build
 
+### loadResources
+`loadResources` returns a list of OpenShift `resources` read from a yaml file.
+This API returns resources list in the form of an array where every array element is a key value pair of resource `kind` and `resource array` itself.
+This API can read multiple resources seperated by `---` from the yaml file.
+
+
+```groovy
+    def resource = loadResources(file: ".openshiftio/app.yaml")
+```
+
+Parameters
+
+|      Name      |  Required  |         Default Value        |                             Description                                |
+|----------------|------------|------------------------------|------------------------------------------------------------------------|
+|      file      |   true     |  none           |    An relative path of resource yaml file.            |
+
+### build
 This is the api which is responsible for doing s2i build, generating image and creating imagestream (if not exist)
 
 ```groovy

@@ -16,13 +16,16 @@ class Utils {
 
   static def ocApply(script, resource, namespace) {
     def buildNum = script.env.BUILD_NUMBER
-    def kind = resource.kind.toLowerCase()
-    def resourceFile = ".openshiftio/.tmp-${namespace}-${buildNum}-${kind}.yaml"
-    script.writeYaml file: resourceFile, data: resource
-    script.sh """
-            oc apply -f ${resourceFile} -n ${namespace}
-            rm -f ${resourceFile}
-        """
+    def resources = [resource].flatten()
+    resources.each { r ->
+      def kind = r.kind.toLowerCase()
+      def resourceFile = ".openshiftio/.tmp-${namespace}-${buildNum}-${kind}.yaml"
+      script.writeYaml file: resourceFile, data: r
+      script.sh """
+        oc apply -f ${resourceFile} -n ${namespace}
+        rm -f ${resourceFile}
+      """
+    }
   }
 
   static String usersNamespace() {

@@ -1,4 +1,4 @@
-import io.openshift.Utils;
+import io.openshift.Utils
 
 def call(Map args = [:]) {
   if (!args.env) {
@@ -23,7 +23,6 @@ def call(Map args = [:]) {
     error "Missing manadatory metadata: tag"
   }
 
-
   if (args.approval == 'manual') {
     // Ensure that waiting for approval happen on master so that slave isn't
     // held up waiting for input
@@ -35,13 +34,14 @@ def call(Map args = [:]) {
   def image = config.runtime() ?: 'oc'
   stage("Deploy to ${args.env}") {
     spawn(image: image) {
-      def userNS = Utils.usersNamespace();
-      def deployNS = userNS + "-" + args.env;
+      def sourceNS = Utils.usersNamespace();
+      def targetNS = sourceNS + "-" + args.env;
 
-      tagImageToDeployEnv(deployNS, userNS, res.ImageStream, tag)
-      deployEnvironment(deployNS, res.DeploymentConfig, res.Service, res.Route, tag, args.env)
+      tagImageToDeployEnv(targetNS, sourceNS, res.ImageStream, tag)
+      applyResources(targetNS, res)
+      verifyDeployments(targetNS, res.DeploymentConfig)
+      annotateRoutes(targetNS, args.env, res.Route, tag)
     }
-
   }
 }
 
@@ -71,18 +71,22 @@ def tagImageToDeployEnv(ns, userNamespace, imageStreams, tag) {
   }
 }
 
-def deployEnvironment(ns, dcs, services, routes, version, env) {
-  dcs.each { dc ->
-    Utils.ocApply(this, dc, ns)
-    openshiftVerifyDeployment(depCfg: "${dc.metadata.name}", namespace: "${ns}")
-  }
+def applyResources(ns, res) {
+  def allowed = { e -> !(e.key in ["ImageStream", "BuildConfig", "meta"]) }
+  def resources = res.findAll(allowed)
+                      .collect({ it.value })
+                      .flatten()
 
-  services.each { s -> Utils.ocApply(this, s, ns) }
-  routes.each { r -> Utils.ocApply(this, r, ns) }
-  annotateRouteURL(ns, env, routes, version)
+  Utils.ocApply(this, resources, ns)
 }
 
-def annotateRouteURL(ns, env, routes, version) {
+def verifyDeployments(ns, dcs) {
+  dcs.each { dc ->
+    openshiftVerifyDeployment(depCfg: "${dc.metadata.name}", namespace: "${ns}")
+  }
+}
+
+def annotateRoutes(ns, env, routes, version) {
   def svcURLs = routes.inject(''){ acc, r -> acc + "\n  ${r.metadata.name}: ${displayRouteURL(ns, r)}" }
   def depVersions = routes.inject(''){ acc, r ->  acc + "\n  ${r.metadata.name}: $version" }
 
@@ -105,5 +109,6 @@ def displayRouteURL(ns, route) {
   } catch (err) {
     error "Error running OpenShift command ${err}"
   }
-  return null
+
+  return ""
 }
