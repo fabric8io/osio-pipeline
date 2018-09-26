@@ -33,13 +33,13 @@ def call(Map args = [:]) {
 
   stage("Deploy to ${args.env}") {
     spawn(image: "oc") {
-      def userNS = Utils.usersNamespace();
-      def deployNS = userNS + "-" + args.env;
+      def sourceNS = Utils.usersNamespace();
+      def targetNS = sourceNS + "-" + args.env;
 
-      tagImageToDeployEnv(deployNS, userNS, res.ImageStream, tag)
-      applyConfigMap(deployNS, res.ConfigMap)
-      applyRole(deployNS, res.RoleBinding)
-      deployEnvironment(deployNS, res.DeploymentConfig, res.Service, res.Route, tag, args.env)
+      tagImageToDeployEnv(targetNS, sourceNS, res.ImageStream, tag)
+      applyResources(targetNS, res)
+      verifyDeployments(targetNS, args.DeploymentConfig)
+      annotateRoutes(targetNS, args.env, res.Route, tag)
     }
   }
 }
@@ -70,38 +70,22 @@ def tagImageToDeployEnv(ns, userNamespace, imageStreams, tag) {
   }
 }
 
-def deployEnvironment(ns, dcs, services, routes, version, env) {
+def applyResources(ns, res) {
+  def allowed = { e -> !(e.key in ["ImageStream", "BuildConfig", "meta"]) }
+  def resources = res.findAll(allowed)
+                      .collect({ it.value })
+                      .flatten()
+
+  Util.ocApply(this, resources, ns)
+}
+
+def verifyDeployments(ns, dcs) {
   dcs.each { dc ->
-    Utils.ocApply(this, dc, ns)
     openshiftVerifyDeployment(depCfg: "${dc.metadata.name}", namespace: "${ns}")
   }
-
-  services.each { s -> Utils.ocApply(this, s, ns) }
-  routes.each { r -> Utils.ocApply(this, r, ns) }
-  annotateRouteURL(ns, env, routes, version)
 }
 
-def applyConfigMap(ns, cms) {
-  if (!cms) {
-    return
-  }
-
-  cms.each { cm -> Utils.ocApply(this, cm, ns) }
-}
-
-def applyRole(ns, roles) {
-  if (!roles) {
-    return
-  }
-
-  try {
-    roles.each { r -> Utils.ocApply(this, r, ns) }
-  } catch(err) {
-    echo "error occurred while creating the role: ${err}"
-  }
-}
-
-def annotateRouteURL(ns, env, routes, version) {
+def annotateRoutes(ns, env, routes, version) {
   def svcURLs = routes.inject(''){ acc, r -> acc + "\n  ${r.metadata.name}: ${displayRouteURL(ns, r)}" }
   def depVersions = routes.inject(''){ acc, r ->  acc + "\n  ${r.metadata.name}: $version" }
 
@@ -124,5 +108,6 @@ def displayRouteURL(ns, route) {
   } catch (err) {
     error "Error running OpenShift command ${err}"
   }
-  return null
+
+  return ""
 }
