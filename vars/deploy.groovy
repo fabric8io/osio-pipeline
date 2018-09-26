@@ -76,7 +76,7 @@ def applyResources(ns, res) {
                       .collect({ it.value })
                       .flatten()
 
-  Util.ocApply(this, resources, ns)
+  Utils.ocApply(this, resources, ns)
 }
 
 def verifyDeployments(ns, dcs) {
