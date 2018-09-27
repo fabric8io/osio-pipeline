@@ -39,7 +39,9 @@ def call(Map args = [:]) {
       def deployNS = userNS + "-" + args.env;
 
       tagImageToDeployEnv(deployNS, userNS, res.ImageStream, tag)
-      deployEnvironment(deployNS, res.DeploymentConfig, res.Service, res.Route, tag, args.env)
+      applyResources(deployNS, res)
+      verifyDeployments(deployNS, res.DeploymentConfig)
+      annotateRoutes(deployNS, args.env, res.Route, tag)
     }
 
   }
@@ -71,18 +73,21 @@ def tagImageToDeployEnv(ns, userNamespace, imageStreams, tag) {
   }
 }
 
-def deployEnvironment(ns, dcs, services, routes, version, env) {
-  dcs.each { dc ->
-    Utils.ocApply(this, dc, ns)
-    openshiftVerifyDeployment(depCfg: "${dc.metadata.name}", namespace: "${ns}")
-  }
+def applyResources(ns, res) {
+  def allowed = { e -> !(e.key in ["ImageStream", "BuildConfig", "meta"]) }
+  def resources = res.findAll(allowed)
+    .collect({ it.value })
 
-  services.each { s -> Utils.ocApply(this, s, ns) }
-  routes.each { r -> Utils.ocApply(this, r, ns) }
-  annotateRouteURL(ns, env, routes, version)
+  Utils.ocApply(this, resources, ns)
 }
 
-def annotateRouteURL(ns, env, routes, version) {
+def verifyDeployments(ns, dcs) {
+  dcs.each { dc ->
+    openshiftVerifyDeployment(depCfg: "${dc.metadata.name}", namespace: "${ns}")
+  }
+}
+
+def annotateRoutes(ns, env, routes, version) {
   def svcURLs = routes.inject(''){ acc, r -> acc + "\n  ${r.metadata.name}: ${displayRouteURL(ns, r)}" }
   def depVersions = routes.inject(''){ acc, r ->  acc + "\n  ${r.metadata.name}: $version" }
 
