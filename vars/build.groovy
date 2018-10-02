@@ -19,7 +19,11 @@ def call(Map args) {
       }
 
       def namespace = args.namespace ?: Utils.usersNamespace()
-      def image = config.runtime() ?: 'oc'
+
+      def image = args.image
+      if (!image) {
+        image = args.commands ? config.runtime() : 'oc'
+      }
 
       def status = ""
       spawn(image: image, version: config.version(), commands: args.commands) {
