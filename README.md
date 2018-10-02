@@ -7,41 +7,34 @@ This git repository contains functions that are used in `Jenkinsfile` to do Cont
 The following example builds a nodejs booster and deploys it to a `stage` enviroment and then on approval to the `run` environment.
 
 ```groovy
-#!/usr/bin/groovy
-@Library('github.com/fabric8io/osio-pipeline@master')_
+@Library('github.com/fabric8io/osio-pipeline@master') _
 
 osio {
 
   config runtime: 'node'
 
   ci {
-
-    def app = processTemplate(params: [
-          release_version: "1.0.${env.BUILD_NUMBER}"
+    // runs oc process
+    def resources = processTemplate(params: [
+          RELEASE_VERSION: "1.0.${env.BUILD_NUMBER}-PR" // indicate pull request
     ])
-
-    build resources: app, commands: """
-          npm version
-          oc version
-    """
+    
+    // performs an s2i build
+    build resources: resources
 
   }
 
   cd {
 
     def resources = processTemplate(params: [
-          release_version: "1.0.${env.BUILD_NUMBER}"
+          RELEASE_VERSION: "1.0.${env.BUILD_NUMBER}"
     ])
 
-    build resources: resources, commands: """
-         npm version
-         oc version
-    """
-
+    build resources: resources
     deploy resources: resources, env: 'stage'
-
+    
+    // wait for user to approve the promotion to "run" environment
     deploy resources: resources, env: 'run', approval: 'manual'
-
   }
 }
 ```
@@ -51,10 +44,9 @@ osio {
 To use the functions in this library just add the following to the top of your `Jenkinsfile`:
 
 ```groovy
-#!/usr/bin/groovy
 @Library('github.com/fabric8io/osio-pipeline@master') _
 ```
-That will use the master branch of this repository.
+That will use the master branch (bleeding edge) of this repository.
 
 ## API
 
