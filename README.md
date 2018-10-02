@@ -15,9 +15,7 @@ osio {
 
   ci {
     // runs oc process
-    def resources = processTemplate(params: [
-          RELEASE_VERSION: "1.0.${env.BUILD_NUMBER}-PR" // indicate pull request
-    ])
+    def resources = processTemplate()
     
     // performs an s2i build
     build resources: resources
@@ -26,8 +24,9 @@ osio {
 
   cd {
 
+    // override the RELEASE_VERSION template parameter
     def resources = processTemplate(params: [
-          RELEASE_VERSION: "1.0.${env.BUILD_NUMBER}"
+        RELEASE_VERSION: "1.0.${env.BUILD_NUMBER}"
     ])
 
     build resources: resources
