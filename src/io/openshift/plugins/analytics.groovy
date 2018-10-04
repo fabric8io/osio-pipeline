@@ -1,6 +1,7 @@
 package io.openshift.plugins
 
 import io.openshift.Events
+import io.openshift.Utils
 
 def register() {
     Events.on("build.pass") {
