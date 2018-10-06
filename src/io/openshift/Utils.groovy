@@ -17,6 +17,7 @@ class Utils {
   static def ocApply(script, resource, namespace) {
     def buildNum = script.env.BUILD_NUMBER
     def resources = [resource].flatten()
+
     resources.each { r ->
       def kind = r.kind.toLowerCase()
       def resourceFile = ".openshiftio/.tmp-${namespace}-${buildNum}-${kind}.yaml"
