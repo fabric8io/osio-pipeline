@@ -9,9 +9,9 @@ def call(Map args = [:]) {
     error "Missing manadatory parameter: resources"
   }
 
-  def required = ['ImageStream', 'DeploymentConfig', 'Service', 'Route', 'meta']
-  // can pass single or multiple maps
+  def required = ['ImageStream', 'DeploymentConfig', 'meta']
   def res = Utils.mergeResources(args.resources)
+
   def found = res.keySet()
   def missing = required - found
   if (missing) {
@@ -92,6 +92,10 @@ def verifyDeployments(ns, dcs) {
 }
 
 def annotateRoutes(ns, env, routes, version) {
+  if (!routes) {
+    return
+  }
+
   def svcURLs = routes.inject(''){ acc, r -> acc + "\n  ${r.metadata.name}: ${displayRouteURL(ns, r)}" }
   def depVersions = routes.inject(''){ acc, r ->  acc + "\n  ${r.metadata.name}: $version" }
 
