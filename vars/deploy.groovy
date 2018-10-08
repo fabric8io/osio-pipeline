@@ -92,6 +92,10 @@ def verifyDeployments(ns, dcs) {
 }
 
 def annotateRoutes(ns, env, routes, version) {
+  if (!routes) {
+    return
+  }
+
   def svcURLs = routes.inject(''){ acc, r -> acc + "\n  ${r.metadata.name}: ${displayRouteURL(ns, r)}" }
   def depVersions = routes.inject(''){ acc, r ->  acc + "\n  ${r.metadata.name}: $version" }
 
