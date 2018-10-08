@@ -9,7 +9,7 @@ def call(Map args = [:]) {
     error "Missing manadatory parameter: resources"
   }
 
-  def required = ['ImageStream', 'DeploymentConfig', 'Service', 'Route', 'meta']
+  def required = ['ImageStream', 'DeploymentConfig', 'meta']
   // can pass single or multiple maps
   def res = Utils.mergeResources(args.resources)
   def found = res.keySet()
