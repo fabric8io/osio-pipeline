@@ -10,14 +10,7 @@ def call(Map args = [:]) {
   }
 
   def required = ['ImageStream', 'DeploymentConfig', 'meta']
-  // can pass single or multiple maps
-  println "------------------------------------------------------"
-  println args.resources
-
   def res = Utils.mergeResources(args.resources)
-  println "---after merging ---------------------------------------------------"
-  println res
-  println "------------------------------------------------------"
 
   def found = res.keySet()
   def missing = required - found
