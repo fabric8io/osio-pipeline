@@ -44,7 +44,7 @@ def slaveTemplate(name, image, shell) {
 }
 
 def jnlpTemplate() {
-    def jnlpImage = 'fabric8/jenkins-slave-base-centos7:vb0268ae'
+    def jnlpImage = 'fabric8/jenkins-slave-base-centos7:v2132422'
 
     return containerTemplate(
         name: 'jnlp',
