@@ -29,12 +29,10 @@ def call(Map args) {
     spawn(image: image, version: config.version(), commands: args.commands) {
       Events.emit("build.start")
       try {
-        echo "${res}"
         createImageStream(res.ImageStream, namespace)
         buildProject(res.BuildConfig, namespace)
         status = "pass"
       } catch (e) {
-        echo "error : ${e}"
         status = "fail"
       } finally {
         Events.emit(["build.end", "build.${status}"],
