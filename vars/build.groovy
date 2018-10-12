@@ -36,7 +36,7 @@ def call(Map args) {
         status = "fail"
       } finally {
         Events.emit(["build.end", "build.${status}"],
-                    [status: status, namespace: namespace, gitURL: gitURL, commitHash: commitHash])
+                    [status: status, namespace: namespace, git: [url: gitURL, commit: commitHash]])
       }
 
       if (status == 'fail') {
