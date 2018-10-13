@@ -20,7 +20,7 @@ def call(Map args = [:]) {
 
   def tag = res.meta.tag
   if (!tag) {
-    error "Missing manadatory metadata: tag"
+    error "Missing mandatory metadata: tag"
   }
 
 
@@ -81,7 +81,6 @@ def applyResources(ns, res) {
   def allowed = { e -> !(e.key in ["ImageStream", "BuildConfig", "meta"]) }
   def resources = res.findAll(allowed)
     .collect({ it.value })
-
   Utils.ocApply(this, resources, ns)
 }
 

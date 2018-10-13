@@ -19,12 +19,12 @@ def call(Map args) {
     }
 
     def namespace = args.namespace ?: Utils.usersNamespace()
-
     def image = args.image
     if (!image) {
       image = args.commands ? config.runtime() : 'oc'
     }
-
+    def gitURL = Utils.shWithOutput(this, "git config remote.origin.url")
+    def commitHash = Utils.shWithOutput(this, "git rev-parse --short HEAD")
     def status = ""
     spawn(image: image, version: config.version(), commands: args.commands) {
       Events.emit("build.start")
@@ -35,7 +35,8 @@ def call(Map args) {
       } catch (e) {
         status = "fail"
       } finally {
-        Events.emit(["build.end", "build.${status}"], [status: status, namespace: namespace])
+        Events.emit(["build.end", "build.${status}"],
+                    [status: status, namespace: namespace, git: [url: gitURL, commit: commitHash]])
       }
 
       if (status == 'fail') {
