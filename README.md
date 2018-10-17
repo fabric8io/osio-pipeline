@@ -257,7 +257,7 @@ Parameters
 |      Name      |  Required  |         Default Value        |                             Description                                |
 |----------------|------------|------------------------------|------------------------------------------------------------------------|
 |      file      |   true     |  none           |    An relative path of resource yaml file.            |
-
+|      validate  |   false    |  true           |    A validation for resource yaml file.               |                       
 ### build
 
 This is the api which is responsible for doing s2i build, generating image and creating imagestream (if not exist)
