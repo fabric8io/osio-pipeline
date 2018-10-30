@@ -60,6 +60,16 @@ def specForImage(image, version){
             shell: '/bin/bash'
       ],
     ],
+    "java": [
+      "latest": [
+            image: "openshift/jenkins-slave-maven-centos7:v4.0",
+            shell: '/bin/bash'
+      ],
+      "1.8": [
+            image: "openshift/jenkins-slave-maven-centos7:v4.0",
+            shell: '/bin/bash'
+      ],
+    ],
   ]
 
   // TODO: validate image in specs
