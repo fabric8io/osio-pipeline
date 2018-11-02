@@ -14,7 +14,7 @@ def register() {
             retry(3) {
                 def response = bayesianAnalysis(url: 'https://bayesian-link', gitUrl: a[0].git.url, ecosystem: image)
                 if (response.success) {
-                  Utils.addAnnotationToBuild(this, 'fabric8.io/bayesian.analysisUrl', response.analysisUrl())
+                  Utils.addAnnotationToBuild(this, 'fabric8.io/bayesian.analysisUrl', response.getAnalysisUrl())
                 } else {
                   echo "Bayesian analysis failed ${response}"
                 }
