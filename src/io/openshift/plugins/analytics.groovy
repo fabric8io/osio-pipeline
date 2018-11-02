@@ -5,7 +5,7 @@ import io.openshift.Utils
 
 def register() {
     Events.on("build.pass") {
-        e, a -> echo "invoking bayesian analytics $e $a"
+        e, a -> echo "invoking bayesian analytics"
         def image = config.runtime()
         if(!image) {
             return
@@ -14,7 +14,7 @@ def register() {
             retry(3) {
                 def response = bayesianAnalysis(url: 'https://bayesian-link', gitUrl: a[0].git.url, ecosystem: image)
                 if (response.success) {
-                  Utils.addAnnotationToBuild(this, 'fabric8.io/bayesian.analysisUrl', response.getAnalysisUrl())
+                  Utils.addAnnotationToBuild(this, 'fabric8.io/bayesian.analysisUrl', response.analysisUrl())
                 } else {
                   echo "Bayesian analysis failed ${response}"
                 }
