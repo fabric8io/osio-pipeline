@@ -29,16 +29,16 @@ class Utils {
     }
   }
 
-  static String usersNamespace() {
-    def ns = currentNamespace()
+  static String usersNamespace(oc) {
+    def ns = currentNamespace(oc)
     if (ns.endsWith("-jenkins")) {
       return ns.substring(0, ns.lastIndexOf("-jenkins"))
     }
     return ns
   }
 
-  static String currentNamespace() {
-    OpenShiftClient oc = new DefaultOpenShiftClient()
+  static String currentNamespace(oc) {
+    oc = oc ?: new DefaultOpenShiftClient()
     return oc.getNamespace()
   }
 

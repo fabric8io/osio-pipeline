@@ -1,0 +1,15 @@
+#!/usr/bin/env groovy
+
+import com.lesfurets.jenkins.unit.global.lib.Library
+
+@Library('osio-pipeline@master') _
+
+import io.openshift.Utils
+
+node() {
+    Utils utils = new Utils()
+
+    stage("Add annotation to current build") {
+      utils.addAnnotationToBuild(this, "testannotation", "test")
+    }
+}

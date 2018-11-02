@@ -1,0 +1,19 @@
+#!/usr/bin/env groovy
+
+import com.lesfurets.jenkins.unit.global.lib.Library
+
+@Library('osio-pipeline@master') _
+
+import io.openshift.Utils
+
+node() {
+    Utils utils = new Utils()
+
+    stage("Merge Resources With different Keys") {
+      echo "Different Keys : ${utils.mergeResources([["a":"b"], ["b": "d"]])}"
+    }
+
+    stage("Merge Resources With Same Keys") {
+      echo "Same Keys : ${utils.mergeResources([["a":"b"], ["a": "d"]])}"
+    }
+}
