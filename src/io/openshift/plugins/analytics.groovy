@@ -10,10 +10,9 @@ def register() {
         if(!image) {
             return
         }
-        def url = Utils.shWithOutput(this, "git config remote.origin.url")
         try {
             retry(3) {
-                def response = bayesianAnalysis url: 'https://bayesian-link', gitUrl: url, ecosystem: image
+                def response = bayesianAnalysis(url: 'https://bayesian-link', gitUrl: a[0].git.url, ecosystem: image)
                 if (response.success) {
                   Utils.addAnnotationToBuild(this, 'fabric8.io/bayesian.analysisUrl', response.getAnalysisUrl())
                 } else {
