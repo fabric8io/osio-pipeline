@@ -2,9 +2,11 @@
 
 This git repository contains functions that are used in `Jenkinsfile` to do Continuous Delivery / Continuous Integration for openshift.io.
 
-## Example
+## Examples
 
-The following example builds a nodejs booster and deploys it to a `stage` enviroment and then on approval to the `run` environment.
+### deploy stand-alone application
+
+The following example builds a nodejs booster and deploys it to a `stage` environment and then on approval to the `run` environment.
 
 ```groovy
 @Library('github.com/fabric8io/osio-pipeline@master') _
@@ -38,6 +40,40 @@ osio {
 }
 ```
 
+### deploy stand-alone application with external configuration
+
+The following example builds a nodejs booster and deploys it to a `stage` environment and then on approval to the `run` environment.
+
+It also loads an external resource like `confgimap` and deploy it to `stage` and `run` environments
+
+```groovy
+@Library('github.com/fabric8io/osio-pipeline@master') _
+
+osio {
+    config runtime: 'node'
+
+    ci {
+        def app = processTemplate()
+        build app: app
+    }
+
+    cd {
+     
+      def resources = processTemplate(params: [
+        release_version: "1.0.${env.BUILD_NUMBER}"
+      ])
+      def cm = loadResources(file: "configmap.yaml")
+      
+      build resources: resources
+      
+      // deploy API takes multiple resources in array form
+      deploy resources: [resources,  cm], env: 'stage'
+      
+      // wait for user to approve the promotion to "run" environment
+      deploy resources: [resources,  cm], env: 'run', approval: 'manual'
+    }
+}
+```
 ## How to use this library
 
 To use the functions in this library just add the following to the top of your `Jenkinsfile`:
