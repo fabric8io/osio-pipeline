@@ -11,6 +11,8 @@ def register() {
             return
         }
         try {
+            def scmUrl = scm.getUserRemoteConfigs()[0].getUrl()
+            echo "YYYYYYYUUUUYYSYYSYS ${scmUrl}"
             retry(3) {
                 def response = bayesianAnalysis(url: 'https://bayesian-link', gitUrl: a[0].git.url, ecosystem: image)
                 if (response.success) {
