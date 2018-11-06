@@ -25,7 +25,7 @@ class Events implements Serializable {
             if (!listeners[e]) {
                 return
             }
-            listeners[e].each { c -> c.call([name: e], args.flatten()) }
+            listeners[e].each { c -> c.call([name: e], args) }
         }
     }
 
