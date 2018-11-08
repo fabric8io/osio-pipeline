@@ -58,7 +58,6 @@ osio {
     }
 
     cd {
-
       def resources = processTemplate(params: [
         release_version: "1.0.${env.BUILD_NUMBER}"
       ])
@@ -74,6 +73,62 @@ osio {
     }
 }
 ```
+
+where `configmap.yaml` is
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadtaa:
+    ...
+
+
+    ...
+
+```
+
+`loadResources` API also supports `List` kind like following one
+
+```groovy
+@Library('github.com/fabric8io/osio-pipeline@master') _
+
+osio {
+    config runtime: 'node'
+
+    ci {
+        def app = processTemplate()
+        build app: app
+    }
+
+    cd {
+      def resources = processTemplate(params: [
+        release_version: "1.0.${env.BUILD_NUMBER}"
+      ])
+      def configurations = loadResources(file: "configurations.yaml")
+
+      build resources: resources
+
+      // deploy API takes multiple resources in array form
+      deploy resources: [resources, configurations], env: 'stage'
+
+      // wait for user to approve the promotion to "run" environment
+      deploy resources: [resources, configurations], env: 'run', approval: 'manual'
+    }
+}
+```
+
+where `configurations.yaml` is
+
+```yaml
+apiVersion: v1
+kind: List
+items:
+  -kind: ConfigMap
+    ...
+  -kind: Secrete
+    ...
+```
+
 ## How to use this library
 
 To use the functions in this library just add the following to the top of your `Jenkinsfile`:
