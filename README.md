@@ -18,7 +18,7 @@ osio {
   ci {
     // runs oc process
     def resources = processTemplate()
-    
+
     // performs an s2i build
     build resources: resources
 
@@ -33,7 +33,7 @@ osio {
 
     build resources: resources
     deploy resources: resources, env: 'stage'
-    
+
     // wait for user to approve the promotion to "run" environment
     deploy resources: resources, env: 'run', approval: 'manual'
   }
@@ -44,7 +44,7 @@ osio {
 
 The following example builds a nodejs booster and deploys it to a `stage` environment and then on approval to the `run` environment.
 
-It also loads an external resource like `confgimap` and deploy it to `stage` and `run` environments
+It also loads an external resource like `configmap` and deploy it to `stage` and `run` environments
 
 ```groovy
 @Library('github.com/fabric8io/osio-pipeline@master') _
@@ -58,17 +58,17 @@ osio {
     }
 
     cd {
-     
+
       def resources = processTemplate(params: [
         release_version: "1.0.${env.BUILD_NUMBER}"
       ])
       def cm = loadResources(file: "configmap.yaml")
-      
+
       build resources: resources
-      
+
       // deploy API takes multiple resources in array form
       deploy resources: [resources,  cm], env: 'stage'
-      
+
       // wait for user to approve the promotion to "run" environment
       deploy resources: [resources,  cm], env: 'run', approval: 'manual'
     }
