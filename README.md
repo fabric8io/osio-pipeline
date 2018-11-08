@@ -4,7 +4,7 @@ This git repository contains functions that are used in `Jenkinsfile` to do Cont
 
 ## Examples
 
-### deploy stand-alone application
+### Deploy stand-alone application
 
 The following example builds a nodejs booster and deploys it to a `stage` environment and then on approval to the `run` environment.
 
@@ -40,7 +40,7 @@ osio {
 }
 ```
 
-### deploy stand-alone application with external configuration
+### Deploy stand-alone application with external configuration
 
 The following example builds a nodejs booster and deploys it to a `stage` environment and then on approval to the `run` environment.
 
@@ -81,10 +81,7 @@ apiVersion: v1
 kind: ConfigMap
 metadtaa:
     ...
-
-
     ...
-
 ```
 
 `loadResources` API also supports `List` kind like following one
