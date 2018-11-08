@@ -42,9 +42,8 @@ osio {
 
 ### Deploy stand-alone application with external configuration
 
-The following example builds a nodejs booster and deploys it to a `stage` environment and then on approval to the `run` environment.
-
-It also loads an external resource like `configmap` and deploy it to `stage` and `run` environments
+The following example build and deploy a nodejs application like previous one.
+It also loads an external resource like `configmap` and deploy it to `stage` and `run` environments.
 
 ```groovy
 @Library('github.com/fabric8io/osio-pipeline@master') _
