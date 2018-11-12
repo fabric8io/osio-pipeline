@@ -1,0 +1,16 @@
+#!/usr/bin/env groovy
+
+import com.lesfurets.jenkins.unit.global.lib.Library
+
+@Library('osio-pipeline@master') _
+
+node() {
+
+    ci {
+     echo "ci test"
+    }
+
+    ci(branch: "trunc") {
+      echo "ci test trunc"
+    }
+}

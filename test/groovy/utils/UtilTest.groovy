@@ -47,12 +47,4 @@ class UtilTest extends PipelineHelper {
     assertStepExecutes("echo", "Namespace : user")
     assertJobStatusSuccess()
   }
-
-  def assertStepExecutes(String method, String value) {
-    Assert.assertTrue(helper.callStack.findAll { call ->
-      call.methodName == method
-    }.any { call ->
-      call.toString().contains(value)
-    })
-  }
 }
