@@ -20,7 +20,7 @@ class CDTest extends PipelineHelper {
   }
 
   @Test
-  void should_not_run_cd_on_master_branch() throws Exception {
+  void should_not_run_ci_on_master_branch() throws Exception {
     //GIVEN
     Script script = loadScript("cd/jenkinsfiles/no-cd.jenkinsfile")
     binding.setProperty("env", ["BRANCH_NAME": "pr-123"])
