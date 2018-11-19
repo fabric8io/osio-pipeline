@@ -1,0 +1,11 @@
+#!/usr/bin/env groovy
+
+import com.lesfurets.jenkins.unit.global.lib.Library
+
+@Library('osio-pipeline@master') _
+
+node() {
+  def cm = loadResources(file: "test/groovy/load-resources/configmap/resource.yaml")
+
+  echo "resources ${cm.keySet() as List}"
+}

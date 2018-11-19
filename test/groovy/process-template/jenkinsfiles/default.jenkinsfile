@@ -1,0 +1,16 @@
+#!/usr/bin/env groovy
+
+import com.lesfurets.jenkins.unit.global.lib.Library
+
+@Library('osio-pipeline@master') _
+
+node() {
+  echo "test"
+  def resources = processTemplate(params: [
+    RELEASE_VERSION: "1.0.${env.BUILD_NUMBER}"
+  ])
+
+  echo "resources ${resources.keySet() as List}"
+  echo "version ${resources.meta.tag}"
+  echo "image ${resources.DeploymentConfig.metadata.labels.version}"
+}

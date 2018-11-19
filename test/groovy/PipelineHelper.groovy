@@ -12,12 +12,12 @@ class PipelineHelper extends BasePipelineTest {
   @Before
   void setUp() throws Exception {
     plugSharedPipelineLib()
-
     // its intended to call it later
     super.setUp()
   }
 
   def plugSharedPipelineLib() {
+
     String sharedLibs = this.class.getResource('./').getFile()
 
     def library = library()

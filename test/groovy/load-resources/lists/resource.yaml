@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: List
+items:
+ - apiVersion: v1
+   kind: RoleBinding
+   metadata:
+     name: role-view-default
+   subjects:
+    - kind: ServiceAccount
+      name: default
+   roleRef:
+      name: view
+ - apiVersion: v1
+   kind: RoleBinding
+   metadata:
+     name: role-view-default2
+   subjects:
+    - kind: ServiceAccount
+      name: default
+   roleRef:
+      name: edit
