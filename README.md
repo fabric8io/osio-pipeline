@@ -2,9 +2,11 @@
 
 This git repository contains functions that are used in `Jenkinsfile` to do Continuous Delivery / Continuous Integration for openshift.io.
 
-## Example
+## Examples
 
-The following example builds a nodejs booster and deploys it to a `stage` enviroment and then on approval to the `run` environment.
+### Deploy stand-alone application
+
+The following example builds a nodejs booster and deploys it to a `stage` environment and then on approval to the `run` environment.
 
 ```groovy
 @Library('github.com/fabric8io/osio-pipeline@master') _
@@ -16,7 +18,7 @@ osio {
   ci {
     // runs oc process
     def resources = processTemplate()
-    
+
     // performs an s2i build
     build resources: resources
 
@@ -31,11 +33,96 @@ osio {
 
     build resources: resources
     deploy resources: resources, env: 'stage'
-    
+
     // wait for user to approve the promotion to "run" environment
     deploy resources: resources, env: 'run', approval: 'manual'
   }
 }
+```
+
+### Deploy stand-alone application with external configuration
+
+The following example build and deploy a nodejs application like previous one.
+It also loads an external resource like `configmap` and deploy it to `stage` and `run` environments.
+
+```groovy
+@Library('github.com/fabric8io/osio-pipeline@master') _
+
+osio {
+    config runtime: 'node'
+
+    ci {
+        def app = processTemplate()
+        build app: app
+    }
+
+    cd {
+      def resources = processTemplate(params: [
+        release_version: "1.0.${env.BUILD_NUMBER}"
+      ])
+      def cm = loadResources(file: "configmap.yaml")
+
+      build resources: resources
+
+      // deploy API takes multiple resources in array form
+      deploy resources: [resources,  cm], env: 'stage'
+
+      // wait for user to approve the promotion to "run" environment
+      deploy resources: [resources,  cm], env: 'run', approval: 'manual'
+    }
+}
+```
+
+where `configmap.yaml` is
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadtaa:
+    ...
+    ...
+```
+
+`loadResources` API also supports `List` kind like following one
+
+```groovy
+@Library('github.com/fabric8io/osio-pipeline@master') _
+
+osio {
+    config runtime: 'node'
+
+    ci {
+        def app = processTemplate()
+        build app: app
+    }
+
+    cd {
+      def resources = processTemplate(params: [
+        release_version: "1.0.${env.BUILD_NUMBER}"
+      ])
+      def configurations = loadResources(file: "configurations.yaml")
+
+      build resources: resources
+
+      // deploy API takes multiple resources in array form
+      deploy resources: [resources, configurations], env: 'stage'
+
+      // wait for user to approve the promotion to "run" environment
+      deploy resources: [resources, configurations], env: 'run', approval: 'manual'
+    }
+}
+```
+
+where `configurations.yaml` is
+
+```yaml
+apiVersion: v1
+kind: List
+items:
+  -kind: ConfigMap
+    ...
+  -kind: Secrete
+    ...
 ```
 
 ## How to use this library
