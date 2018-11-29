@@ -10,6 +10,6 @@ node() {
     Utils utils = new Utils()
 
     stage("Get User Namespace") {
-      echo "Namespace : ${utils.usersNamespace(oc)}"
+      echo "Namespace : ${utils.usersNamespace()}"
     }
 }
