@@ -29,7 +29,7 @@ class Utils {
     }
   }
 
-  static String usersNamespace(oc) {
+  static String usersNamespace(oc = null) {
     def ns = currentNamespace(oc)
     if (ns.endsWith("-jenkins")) {
       return ns.substring(0, ns.lastIndexOf("-jenkins"))
@@ -37,7 +37,7 @@ class Utils {
     return ns
   }
 
-  static String currentNamespace(oc) {
+  static String currentNamespace(oc = null) {
     oc = oc ?: new DefaultOpenShiftClient()
     return oc.getNamespace()
   }
