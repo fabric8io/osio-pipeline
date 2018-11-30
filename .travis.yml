@@ -11,5 +11,6 @@ install:
     curl -LO https://github.com/openshift/origin/releases/download/v3.9.0/${OC_VERSION}.tar.gz && \
         tar -xvzf ${OC_VERSION}.tar.gz && chmod +x $PWD/${OC_VERSION}/oc && sudo mv $PWD/${OC_VERSION}/oc /usr/local/bin/ && \
         rm -rf ${OC_VERSION}.tar.gz
+    oc version
 script:
   - mvn verify
