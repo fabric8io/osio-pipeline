@@ -1,4 +1,4 @@
-# OSIO Pipeline
+# OSIO Pipeline [![Build Status](https://travis-ci.org/fabric8io/osio-pipeline.svg?branch=master)](https://travis-ci.org/fabric8io/osio-pipeline)
 
 This git repository contains functions that are used in `Jenkinsfile` to do Continuous Delivery / Continuous Integration for openshift.io.
 
@@ -357,3 +357,4 @@ To run the unit tests, execute
 ```
 mvn test
 ```
+
