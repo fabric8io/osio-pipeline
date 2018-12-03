@@ -1,0 +1,13 @@
+#!/usr/bin/env groovy
+
+import com.lesfurets.jenkins.unit.global.lib.Library
+
+@Library('osio-pipeline@master') _
+
+node() {
+
+    cd {
+     echo "cd test"
+    }
+
+}

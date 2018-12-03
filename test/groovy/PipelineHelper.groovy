@@ -1,4 +1,5 @@
 import com.lesfurets.jenkins.unit.BasePipelineTest
+import org.junit.Assert
 import org.junit.Before
 
 import static com.lesfurets.jenkins.unit.global.lib.LibraryConfiguration.library
@@ -31,5 +32,19 @@ class PipelineHelper extends BasePipelineTest {
 
     setScriptRoots(['src', 'vars', 'test/groovy'] as String[])
     setScriptExtension('groovy')
+  }
+
+  def assertStepExecutes(String method, String value) {
+    Assert.assertTrue(helper.callStack.findAll { call ->
+      call.methodName == method
+    }.any { call ->
+      call.toString().contains(value)
+    })
+  }
+
+  def assertMethodNotCalled(String method) {
+    Assert.assertTrue(helper.callStack.findAll { call ->
+      call.methodName == method
+    }.size() == 0)
   }
 }
