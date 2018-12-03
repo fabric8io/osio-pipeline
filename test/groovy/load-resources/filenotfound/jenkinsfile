@@ -1,0 +1,9 @@
+#!/usr/bin/env groovy
+
+import com.lesfurets.jenkins.unit.global.lib.Library
+
+@Library('osio-pipeline@master') _
+
+node() {
+  loadResources(file: "invalid_file_path")
+}

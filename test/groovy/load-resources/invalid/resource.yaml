@@ -1,0 +1,9 @@
+apiVersion: v1
+data:
+  app-config.yml: |
+    message : "Hello, %s from a ConfigMap !"
+    level : INFO
+#missing kind
+#kind: ConfigMap
+metadata:
+  name: app-config

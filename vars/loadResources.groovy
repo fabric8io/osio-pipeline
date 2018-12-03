@@ -1,8 +1,18 @@
 import io.openshift.Utils
 
 def call(Map args = [:]) {
-  if (!args.file) {
-    error "Missing manadatory parameter: file"
+  def file = args.file
+
+  if (!file) {
+    error "Missing mandatory parameter: file"
+    currentBuild.result = 'FAILURE'
+    return
+  }
+
+  if (!fileExists(file)) {
+    error "Resource $file file could not be found; aborting ..."
+    currentBuild.result = 'FAILURE'
+    return
   }
 
   def validate = args.validate == false ? false : true

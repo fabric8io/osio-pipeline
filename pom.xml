@@ -37,6 +37,7 @@
     <groovy-cps.version>1.11</groovy-cps.version>
     <javax.servlet-api.version>3.0.1</javax.servlet-api.version>
     <mockwebserver.version>0.1.0</mockwebserver.version>
+    <snakeyaml.version>1.19</snakeyaml.version>
   </properties>
 
   <dependencyManagement>
@@ -133,6 +134,13 @@
       <artifactId>javax.servlet-api</artifactId>
       <version>${javax.servlet-api.version}</version>
       <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.yaml</groupId>
+      <artifactId>snakeyaml</artifactId>
+      <version>${snakeyaml.version}</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 
