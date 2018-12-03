@@ -7,6 +7,13 @@ def call(Map args = [:], body = null){
 
     def spec = specForImage(args.image, args.version?: 'latest')
     def checkoutScm = args.checkout_scm ?: true
+    def javaOptions = ''
+    def mavenOptions = ''
+    if (args.image == 'java'){
+      javaOptions = spec.java_opts
+      mavenOptions = spec.maven_opts
+    }
+
 
     // oc is available on master so don't spawn unnecessarily
     if (args.image == "oc") {
@@ -14,7 +21,7 @@ def call(Map args = [:], body = null){
       return
     }
 
-    pod(name: args.image, image: spec.image, shell: spec.shell) {
+    pod(name: args.image, image: spec.image, shell: spec.shell, javaOptions: javaOptions, mavenOptions: mavenOptions) {
       if (checkoutScm) {
         checkout scm
       }
@@ -63,11 +70,15 @@ def specForImage(image, version){
     "java": [
       "latest": [
             image: "openshift/jenkins-slave-maven-centos7:v4.0",
-            shell: '/bin/bash'
+            shell: '/bin/bash',
+            maven_opts: '-Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn',
+            java_opts: '-Duser.home=/home/jenkins -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Dsun.zip.disableMemoryMapping=true -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m'
       ],
       "1.8": [
             image: "openshift/jenkins-slave-maven-centos7:v4.0",
-            shell: '/bin/bash'
+            shell: '/bin/bash',
+            maven_opts: '-Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn',
+            java_opts: '-Duser.home=/home/jenkins -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Dsun.zip.disableMemoryMapping=true -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m'
       ],
     ],
   ]

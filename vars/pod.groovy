@@ -2,14 +2,13 @@ import io.openshift.Utils
 
 def call(Map args = [:], body = null) {
     def label = Utils.buildID(env.JOB_NAME, env.BUILD_NUMBER, prefix=args.name)
-
     podTemplate(
       label: label,
       cloud: 'openshift',
       serviceAccount: 'jenkins',
       inheritFrom: 'base',
       containers: [
-        slaveTemplate(args.name, args.image, args.shell),
+        slaveTemplate(args.name, args.image, args.shell, args.javaOptions, args.mavenOptions),
         jnlpTemplate()
       ],
       volumes: volumes(),
@@ -31,16 +30,32 @@ def volumes() {
   ]
 }
 
-def slaveTemplate(name, image, shell) {
-    containerTemplate(
-        name: name,
-        image: image,
-        command: "$shell -c",
-        args: 'cat',
-        ttyEnabled: true,
-        workingDir: '/home/jenkins/',
-        resourceLimitMemory: '640Mi'
-    )
+def slaveTemplate(name, image, shell, javaOptions, mavenOptions) {
+    if (name == 'java') {
+      return containerTemplate(
+          name: name,
+          image: image,
+          command: "$shell -c",
+          args: 'cat',
+          ttyEnabled: true,
+          workingDir: '/home/jenkins/',
+          resourceLimitMemory: '640Mi',
+          envVars: [
+                    envVar(key: '_JAVA_OPTIONS', value: javaOptions),
+                    envVar(key: 'MAVEN_OPTS', value: mavenOptions)
+                   ]
+      )
+    } else {
+      return containerTemplate(
+          name: name,
+          image: image,
+          command: "$shell -c",
+          args: 'cat',
+          ttyEnabled: true,
+          workingDir: '/home/jenkins/',
+          resourceLimitMemory: '640Mi'
+      )
+    }
 }
 
 def jnlpTemplate() {
