@@ -241,11 +241,15 @@ following values by default. You can override them by passing key value pairs in
 |    SOURCE_REPOSITORY_REF    |  output of `git rev-parse --short HEAD`  |
 |       RELEASE_VERSION       |  output of `git rev-list --count HEAD`   |
 
+NOTE : `processTemplate` API expects a `RELEASE_VERSION` parameter in OpenShift template. This parameter
+is used to tag an image in `build` API and then to refer the same image in `deploy` API while 
+building and deploying an application.
+
 ### loadResources
 
 `loadResources` returns a list of OpenShift `resources` read from a yaml file.
 This API returns resources list in the form of an array where every array element is a key value pair of resource `kind` and `resource array` itself.
-This API can read multiple resources seperated by `---` from the yaml file.
+This API can read multiple resources separated by `---` from the yaml file.
 
 
 ```groovy
