@@ -3,7 +3,7 @@ import io.openshift.Utils
 def call(args=[:]) {
   def file = args.file ?: ".openshiftio/application.yaml"
   if (!fileExists(file)) {
-    currentBuild.result = 'ABORTED'
+    currentBuild.result = 'FAILURE'
     error "Application template could not be found at $file; aborting ..."
     return
   }

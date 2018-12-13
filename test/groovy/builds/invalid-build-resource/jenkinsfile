@@ -1,0 +1,13 @@
+#!/usr/bin/env groovy
+
+import com.lesfurets.jenkins.unit.global.lib.Library
+
+@Library('osio-pipeline@master')_
+
+node() {
+  def resources = processTemplate(file: "test/groovy/builds/invalid-build-resource/application.yaml", params: [
+    RELEASE_VERSION: "1.0.${env.BUILD_NUMBER}"
+  ])
+
+  build resources: resources
+}

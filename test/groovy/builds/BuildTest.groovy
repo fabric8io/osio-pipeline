@@ -1,0 +1,131 @@
+import io.fabric8.openshift.client.OpenShiftClient
+import io.fabric8.openshift.client.server.mock.OpenShiftServer
+import org.junit.Rule
+import org.junit.Test
+import org.yaml.snakeyaml.Yaml
+
+class BuildTest extends PipelineHelper {
+
+  static final String STUB_YAML_FILE = "test/groovy/build/valid/application.yaml"
+  static final String DEFAULT_FILE_NAME = ".openshiftio/application.yaml"
+
+  @Rule
+  public OpenShiftServer server = new OpenShiftServer(true, true)
+
+  @Test
+  void should_fail_on_no_resources() throws Exception {
+    //GIVEN
+    mockSh({ arg ->
+      return Runtime.getRuntime().exec(arg.script).text
+    })
+    Script script = loadScript("builds/no-resources-arg/jenkinsfile")
+
+    // WHEN
+    runScript(script)
+
+    // THEN
+    assertJobStatusFailure()
+  }
+
+  @Test
+  void should_fail_if_missing_mandatory_parameters() throws Exception {
+    //GIVEN
+    initMocks()
+    Script script = loadScript("builds/invalid-build-resource/jenkinsfile")
+
+    // WHEN
+    runScript(script)
+
+    // THEN
+    assertJobStatusFailure()
+  }
+
+  @Test
+  void should_tag_image_and_trigger_build() throws Exception {
+    //GIVEN
+    OpenShiftClient oc = server.getOpenshiftClient()
+    binding.setVariable("oc", oc)
+    binding.setProperty("oc", oc)
+    initMocks(oc)
+    Script script = loadScript("builds/valid-build-resource/jenkinsfile")
+
+    // WHEN
+    runScript(script)
+
+    // THEN
+    assertJobStatusSuccess()
+  }
+
+  def initMocks(oc = null) {
+    binding.setProperty("env", ["BUILD_NUMBER": "2", "BRANCH_NAME": "master"])
+
+    helper.registerAllowedMethod("fileExists", [String.class], { searchTerm ->
+      return true
+    })
+
+    helper.registerAllowedMethod("readYaml", [Map], { Map parameters ->
+      Yaml yaml = new Yaml()
+
+      if (parameters.text) {
+        return yaml.load(parameters.text)
+      }
+
+      def file = parameters.file != ".openshiftio/application.yaml" ? parameters.file : STUB_YAML_FILE
+      return yaml.load(new File(file).text)
+    })
+
+    helper.registerAllowedMethod("writeYaml", [Map], { Map parameters ->
+      Yaml yaml = new Yaml()
+      File resourceFile = new File(parameters.file)
+      resourceFile.parentFile.mkdirs()
+      yaml.dump(parameters.data, new FileWriter(resourceFile))
+    })
+
+    helper.registerAllowedMethod("sh", [String], { String str ->
+      str.eachLine {
+        def command = it.trim()
+        if (!command.isEmpty()) {
+          if (oc != null && it.contains("oc apply -f ")) {
+            oc.load(getFile(command)).createOrReplace()
+            return ""
+          }
+
+          return Runtime.getRuntime().exec(command).text
+        }
+      }
+    })
+
+    helper.registerAllowedMethod("sh", [Map], { Map parameters ->
+      if (parameters.script.contains("git ")) {
+        return "some"
+      }
+
+      if (parameters.script.contains("oc process")) {
+        command = parameters.script + " --local=true"
+        command = !command.contains(DEFAULT_FILE_NAME) ?: command.replaceAll(DEFAULT_FILE_NAME, STUB_YAML_FILE)
+        return Runtime.getRuntime().exec(parameters.script).text
+      }
+
+      if (parameters.script.contains("oc get is")) {
+        return ""
+      }
+
+      return Runtime.getRuntime().exec(parameters.script).text
+    })
+
+    helper.registerAllowedMethod("openshiftBuild", [Map], { p ->
+      return ""
+    })
+  }
+
+  def mockSh(Closure c) {
+    helper.registerAllowedMethod("sh", [Map], { Map parameters ->
+      return c.call(parameters)
+    })
+  }
+
+  def getFile(String s) {
+    return new FileInputStream(s.tokenize(" ").get(3))
+  }
+
+}
