@@ -3,13 +3,13 @@ import org.yaml.snakeyaml.Yaml
 
 class ProcessTemplateTest extends PipelineHelper {
 
-  static final String DEFAULT_YAML_FILE = "test/groovy/process-template/jenkinsfiles/application.yaml"
+  static final String DEFAULT_YAML_FILE = "test/groovy/process-template/valid-templates/application.yaml"
 
   @Test
   void should_process_template() throws Exception {
     //GIVEN
     initMocks()
-    Script script = loadScript("process-template/jenkinsfiles/template.jenkinsfile")
+    Script script = loadScript("process-template/valid-templates/template.jenkinsfile")
 
     // WHEN
     runScript(script)
@@ -25,7 +25,7 @@ class ProcessTemplateTest extends PipelineHelper {
   void should_process_template_with_default_app_yaml() throws Exception {
     //GIVEN
     initMocks()
-    Script script = loadScript("process-template/jenkinsfiles/default.jenkinsfile")
+    Script script = loadScript("process-template/valid-templates/default.jenkinsfile")
 
     // WHEN
     runScript(script)
@@ -35,6 +35,19 @@ class ProcessTemplateTest extends PipelineHelper {
     assertStepExecutes("echo", "version 1.0.2")
     assertStepExecutes("echo", "image [1.0.2]")
     assertJobStatusSuccess()
+  }
+
+  @Test
+  void check_release_version_absent_in_template() throws Exception {
+    //GIVEN
+    initMocks()
+    Script script = loadScript("process-template/invalid-templates/jenkinsfile")
+
+    //when
+    runScript(script)
+
+    // then
+    assertJobStatusFailure()
   }
 
   def initMocks() {

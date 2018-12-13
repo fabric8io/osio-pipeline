@@ -3,13 +3,18 @@ import io.openshift.Utils
 def call(args=[:]) {
   def file = args.file ?: ".openshiftio/application.yaml"
   if (!fileExists(file)) {
-      error "Application template could not be found at $file; aborting ..."
-      currentBuild.result = 'ABORTED'
-      return
+    currentBuild.result = 'ABORTED'
+    error "Application template could not be found at $file; aborting ..."
+    return
   }
 
-
   def parameters = readYaml(file: file).parameters ?: []
+  if(!isValidTemplate(parameters)){
+    currentBuild.result = 'FAILURE'
+    error "Invalid template, please refer below link to fix the application template (application.yaml) and build again \n"+
+      "https://github.com/fabric8io/osio-pipeline#processtemplate"
+    return
+  }
   def paramNames = parameters.collect { it.name }
   def params = applyDefaults(args.params, paramNames)
 
@@ -43,4 +48,16 @@ def applyDefaults(provided=[:], templateParams) {
   setParam('SOURCE_REPOSITORY_URL') { Utils.shWithOutput(this, "git config remote.origin.url") }
   setParam('RELEASE_VERSION') { Utils.shWithOutput(this, "git rev-list --count HEAD") }
   return params
+}
+
+boolean isValidTemplate(parameters=[[:]]){
+  def templateParam = []
+  parameters.each {
+    templateParam << it.name
+  }
+  if(!templateParam.contains("RELEASE_VERSION")){
+    echo "Missing parameter RELEASE_VERSION in openshift template"
+    return false
+  }
+  return true
 }
