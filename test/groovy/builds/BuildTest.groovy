@@ -53,8 +53,9 @@ class BuildTest extends PipelineHelper {
     runScript(script)
 
     // THEN
+    printCallStack()
     assertStepExecutes("sh", "2-buildconfig")
-    assertStepExecutes("openshiftBuild", "buildConfig=nodejs-configmap-s2i-master")
+    assertStepExecutes("sh", "nodejs-configmap-s2i-master")
     assertJobStatusSuccess()
   }
 
@@ -69,8 +70,8 @@ class BuildTest extends PipelineHelper {
   }
 
   def mockOpenShiftBuild() {
-    helper.registerAllowedMethod("openshiftBuild", [Map], { p ->
-      return ""
+    helper.registerAllowedMethod("retry", [Integer, Closure], { i, c ->
+      c.call()
     })
   }
 
