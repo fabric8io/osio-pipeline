@@ -1,7 +1,5 @@
 package io.openshift
 
-import io.fabric8.openshift.api.model.BuildBuilder
-import io.fabric8.openshift.api.model.BuildRequestBuilder
 import io.fabric8.openshift.client.DefaultOpenShiftClient
 import io.fabric8.openshift.client.OpenShiftClient
 import jenkins.model.Jenkins
