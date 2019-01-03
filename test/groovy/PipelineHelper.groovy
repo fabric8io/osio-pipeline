@@ -17,7 +17,6 @@ class PipelineHelper extends BasePipelineTest {
   }
 
   def plugSharedPipelineLib() {
-
     String sharedLibs = this.class.getResource('./').getFile()
 
     def library = library()
@@ -46,5 +45,9 @@ class PipelineHelper extends BasePipelineTest {
     Assert.assertTrue(helper.callStack.findAll { call ->
       call.methodName == method
     }.size() == 0)
+  }
+
+  def isNotDefaultTemplate(String file) {
+    file != null && file != ".openshiftio/application.yaml"
   }
 }

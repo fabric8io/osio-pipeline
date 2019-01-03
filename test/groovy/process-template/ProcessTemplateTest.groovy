@@ -64,7 +64,7 @@ class ProcessTemplateTest extends PipelineHelper {
         return yaml.load(parameters.text)
       }
 
-      def file = parameters.file != ".openshiftio/application.yaml" ? parameters.file : DEFAULT_YAML_FILE
+      def file = isNotDefaultTemplate(parameters.file) ? parameters.file : DEFAULT_YAML_FILE
       return yaml.load(new File(file).text)
     })
 
