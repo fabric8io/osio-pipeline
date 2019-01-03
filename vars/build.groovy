@@ -4,9 +4,10 @@ import io.openshift.Utils
 def call(Map args) {
   stage("Build application") {
     if (!args.resources) {
+      currentBuild.result = 'FAILURE'
       error "Missing manadatory parameter: resources"
+      return
     }
-
 
     // can pass single or multiple maps
     def res = Utils.mergeResources(args.resources)
@@ -15,10 +16,12 @@ def call(Map args) {
     def found = res.keySet()
     def missing = required - found
     if (missing) {
+      currentBuild.result = 'FAILURE'
       error "Missing mandatory build resources params: $missing; found: $found"
+      return
     }
 
-    def namespace = args.namespace ?: Utils.usersNamespace()
+    def namespace = args.namespace ?: Utils.usersNamespace(args.osClient)
     def image = args.image
     if (!image) {
       image = args.commands ? config.runtime() : 'oc'
