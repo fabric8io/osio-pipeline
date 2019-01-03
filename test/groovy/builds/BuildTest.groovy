@@ -45,7 +45,6 @@ class BuildTest extends PipelineHelper {
     //GIVEN
     OpenShiftClient oc = server.getOpenshiftClient()
     binding.setVariable("oc", oc)
-    binding.setProperty("oc", oc)
     initMocks(oc)
     Script script = loadScript("builds/valid-build-resource/jenkinsfile")
 
