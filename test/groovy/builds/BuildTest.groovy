@@ -45,6 +45,7 @@ class BuildTest extends PipelineHelper {
     //GIVEN
     OpenShiftClient oc = server.getOpenshiftClient()
     binding.setVariable("oc", oc)
+    binding.setProperty("oc", oc)
     initMocks(oc)
     Script script = loadScript("builds/valid-build-resource/jenkinsfile")
 
@@ -52,7 +53,7 @@ class BuildTest extends PipelineHelper {
     runScript(script)
 
     // THEN
-    assertStepExecutes("sh", "myproject-2-buildconfig")
+    assertStepExecutes("sh", "2-buildconfig")
     assertStepExecutes("openshiftBuild", "buildConfig=nodejs-configmap-s2i-master")
     assertJobStatusSuccess()
   }
