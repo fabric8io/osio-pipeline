@@ -2,7 +2,7 @@ import io.openshift.Events
 import io.openshift.Utils
 
 def call(Map args) {
-  stage("Build application") {
+  stage("Build Image") {
     if (!args.resources) {
       currentBuild.result = 'FAILURE'
       error "Missing manadatory parameter: resources"

@@ -37,7 +37,7 @@ def call(Map args = [:]) {
     image = args.commands ? config.runtime() : 'oc'
   }
 
-  stage("Deploy to ${args.env}") {
+  stage("Rollout to ${args.env}") {
     spawn(image: image) {
       def userNS = Utils.usersNamespace();
       def deployNS = userNS + "-" + args.env;
