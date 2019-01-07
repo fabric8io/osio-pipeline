@@ -1,6 +1,9 @@
 import io.openshift.Events
 import io.openshift.Utils
 
+import static io.openshift.Utils.ocApply
+import static io.openshift.Utils.shWithOutput
+
 def call(Map args) {
   stage("Build Image") {
     if (!args.resources) {
@@ -26,8 +29,8 @@ def call(Map args) {
     if (!image) {
       image = args.commands ? config.runtime() : 'oc'
     }
-    def gitURL = Utils.shWithOutput(this, "git config remote.origin.url")
-    def commitHash = Utils.shWithOutput(this, "git rev-parse --short HEAD")
+    def gitURL = shWithOutput(this, "git config remote.origin.url")
+    def commitHash = shWithOutput(this, "git rev-parse --short HEAD")
     def status = ""
     spawn(image: image, version: config.version(), commands: args.commands) {
       Events.emit("build.start")
@@ -49,21 +52,27 @@ def call(Map args) {
   }
 }
 
-def createImageStream(imageStreams, namespace) {
-    imageStreams.each { imageStream ->
-        def isName = imageStream.metadata.name
-        def isFound = Utils.shWithOutput(this, "oc get is/$isName -n $namespace --ignore-not-found")
-        if (!isFound) {
-          Utils.ocApply(this, imageStream, namespace)
-        } else {
-          echo "image stream exist ${isName}"
-        }
+def createImageStream(imageStreams, ns) {
+    imageStreams.each { is ->
+      ocApply(this, is, ns)
     }
 }
 
-def buildProject(buildConfigs, namespace) {
+def buildProject(buildConfigs, ns) {
     buildConfigs.each { buildConfig ->
-        Utils.ocApply(this, buildConfig, namespace)
-        openshiftBuild(buildConfig: "${buildConfig.metadata.name}", showBuildLogs: 'true')
+      startBuild(buildConfig, ns)
+      watchBuildLogs(buildConfig, ns)
     }
+}
+
+def startBuild(buildConfig, ns) {
+  ocApply(this, buildConfig, ns)
+  sh "oc start-build ${buildConfig.metadata.name} -n $ns"
+}
+
+def watchBuildLogs(buildConfig, ns) {
+  retry(3) {
+    sleep 3
+    sh "oc logs bc/$buildConfig.metadata.name -f -n $ns"
+  }
 }

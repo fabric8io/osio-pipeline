@@ -1,4 +1,7 @@
-import io.openshift.Utils;
+import io.openshift.Utils
+
+import static io.openshift.Utils.ocApply
+import static io.openshift.Utils.shWithOutput;
 
 def call(Map args = [:]) {
   if (!args.env) {
@@ -41,9 +44,10 @@ def call(Map args = [:]) {
     spawn(image: image) {
       def userNS = Utils.usersNamespace();
       def deployNS = userNS + "-" + args.env;
-
+      pauseDeployments(deployNS, res.DeploymentConfig)
       tagImageToDeployEnv(deployNS, userNS, res.ImageStream, tag)
       applyResources(deployNS, res)
+      resumeDeployments(deployNS, res.DeploymentConfig)
       verifyDeployments(deployNS, res.DeploymentConfig)
       annotateRoutes(deployNS, args.env, res.Route, tag)
     }
@@ -77,16 +81,33 @@ def tagImageToDeployEnv(ns, userNamespace, imageStreams, tag) {
   }
 }
 
+def pauseDeployments(ns, dcs) {
+  dcs.each { dc ->
+    if(shWithOutput(this, "oc get dc/${dc.metadata.name} -n $ns --ignore-not-found"))
+      shWithOutput(this, "oc rollout pause dc/${dc.metadata.name} -n ${ns}")
+  }
+}
+
 def applyResources(ns, res) {
   def allowed = { e -> !(e.key in ["ImageStream", "BuildConfig", "meta"]) }
   def resources = res.findAll(allowed)
     .collect({ it.value })
-  Utils.ocApply(this, resources, ns)
+  ocApply(this, resources, ns)
+}
+
+def resumeDeployments(ns, dcs) {
+  dcs.each { dc ->
+    try {
+      shWithOutput(this, "oc rollout resume dc/${dc.metadata.name} -n ${ns}")
+    } catch(e) {
+      echo "Skip resuming deployment"
+    }
+  }
 }
 
 def verifyDeployments(ns, dcs) {
   dcs.each { dc ->
-    openshiftVerifyDeployment(depCfg: "${dc.metadata.name}", namespace: "${ns}")
+    sh  "oc rollout status dc/${dc.metadata.name} -n ${ns}"
   }
 }
 
@@ -108,7 +129,7 @@ deploymentVersions: $depVersions
 
 def displayRouteURL(ns, route) {
   try {
-    def routeUrl = Utils.shWithOutput(this,
+    def routeUrl = shWithOutput(this,
       "oc get route -n ${ns} ${route.metadata.name} --template 'http://{{.spec.host}}'")
 
     echo "${ns.capitalize()} URL: ${routeUrl}"

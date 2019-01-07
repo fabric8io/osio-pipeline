@@ -53,7 +53,6 @@ class BuildTest extends PipelineHelper {
     runScript(script)
 
     // THEN
-    printCallStack()
     assertStepExecutes("sh", "2-buildconfig")
     assertStepExecutes("sh", "nodejs-configmap-s2i-master")
     assertJobStatusSuccess()
