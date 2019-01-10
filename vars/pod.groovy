@@ -2,13 +2,16 @@ import io.openshift.Utils
 
 def call(Map args = [:], body = null) {
     def label = Utils.buildID(env.JOB_NAME, env.BUILD_NUMBER, prefix=args.name)
+    def envVar = args.envVar
+    def envVars = processEnvVars(envVar)
+
     podTemplate(
       label: label,
       cloud: 'openshift',
       serviceAccount: 'jenkins',
       inheritFrom: 'base',
       containers: [
-        slaveTemplate(args.name, args.image, args.shell, args.javaOptions, args.mavenOptions),
+        slaveTemplate(args.name, args.image, args.shell, envVars),
         jnlpTemplate()
       ],
       volumes: volumes(),
@@ -30,8 +33,8 @@ def volumes() {
   ]
 }
 
-def slaveTemplate(name, image, shell, javaOptions, mavenOptions) {
-    if (name == 'java') {
+def slaveTemplate(name, image, shell, envVars) {
+    if (envVars) {
       return containerTemplate(
           name: name,
           image: image,
@@ -40,10 +43,7 @@ def slaveTemplate(name, image, shell, javaOptions, mavenOptions) {
           ttyEnabled: true,
           workingDir: '/home/jenkins/',
           resourceLimitMemory: '640Mi',
-          envVars: [
-                    envVar(key: '_JAVA_OPTIONS', value: javaOptions),
-                    envVar(key: 'MAVEN_OPTS', value: mavenOptions)
-                   ]
+          envVars: envVars
       )
     } else {
       return containerTemplate(
@@ -68,4 +68,11 @@ def jnlpTemplate() {
         workingDir: '/home/jenkins/',
         resourceLimitMemory: '256Mi'
     )
+}
+
+def processEnvVars(env){
+  envVars = []
+  env.each { e -> envVars << envVar(key: "${e.key}", value: "${e.value[0]}")
+  }
+  return envVars
 }
