@@ -35,7 +35,10 @@ This repository provides a set of pipeline functions (pipeline library) that are
 This pipeline library can be used with any OpenShift cluster which adheres following [prerequisites](#prerequisites).
 
 ## Prerequisites
- - OpenShift command-line interface (`oc` binary) should be available on Jenkins master or slave nodes.
+ - OpenShift command-line interface (`oc` binary) should be available on Jenkins master or/and slave nodes.
+ - Jenkins should have following set of plugins
+    - [Pipeline Model Definition Plugin](https://wiki.jenkins.io/display/JENKINS/Pipeline+Model+Definition+Plugin)
+    - [Kubernetes Plugin](https://wiki.jenkins.io/display/JENKINS/Kubernetes+Plugin)
  - Familarity with writing `Jenkinsfile`, basic groovy syntax and Jenkins pipeline.
 
 ## User Guide
