@@ -1,10 +1,50 @@
-# OSIO Pipeline [![Build Status](https://travis-ci.org/fabric8io/osio-pipeline.svg?branch=master)](https://travis-ci.org/fabric8io/osio-pipeline)
 
-This git repository contains functions that are used in `Jenkinsfile` to do Continuous Delivery / Continuous Integration for openshift.io.
+# OpenShift Pipeline Library [![Build Status](https://travis-ci.org/fabric8io/osio-pipeline.svg?branch=master)](https://travis-ci.org/fabric8io/osio-pipeline)
 
-## Examples
+<!-- @import "[TOC]" {cmd="toc" depthFrom=1 depthTo=6 orderedList=false} -->
 
-### Deploy stand-alone application
+<!-- code_chunk_output -->
+
+* [OpenShift Pipeline Library ![Build Status](https://travis-ci.org/fabric8io/osio-pipeline)](#openshift-pipeline-library-build-statushttpstravis-ciorgfabric8ioosio-pipelinesvgbranchmasterhttpstravis-ciorgfabric8ioosio-pipeline)
+	* [Overview](#overview)
+	* [Prerequisites](#prerequisites)
+	* [User Guide](#user-guide)
+		* [Examples](#examples)
+			* [Deploy stand-alone application](#deploy-stand-alone-application)
+			* [Deploy stand-alone application with external configuration](#deploy-stand-alone-application-with-external-configuration)
+		* [How to use this library](#how-to-use-this-library)
+	* [API](#api)
+		* [osio](#osio)
+		* [config](#config)
+		* [ci](#ci)
+		* [cd](#cd)
+		* [processTemplate](#processtemplate)
+		* [loadResources](#loadresources)
+		* [build](#build)
+		* [deploy](#deploy)
+		* [spawn](#spawn)
+	* [Contibution Guide](#contibution-guide)
+		* [Dev Setup](#dev-setup)
+		* [Test](#test)
+
+<!-- /code_chunk_output -->
+
+## Overview
+
+This repository provides a set of pipeline functions (pipeline library) that are used in `Jenkinsfile` to do Continuous Delivery / Continuous Integration for openshift.io applications.
+This pipeline library can be used with any OpenShift cluster which addhers following [prerequisites](#prerequisites).
+
+## Prerequisites
+ - OpenShift commandline interface (`oc` binrary) should be available on Jenkins master or slave nodes.
+ - Familarity with writing `Jenkinsfile`, basic groovy syntax and Jenkins pipeline.
+
+## User Guide
+
+### Examples
+
+Following are some example `Jenkinsfiles` to illustarte how to use this pipeline library.
+
+#### Deploy stand-alone application
 
 The following example builds a nodejs booster and deploys it to a `stage` environment and then on approval to the `run` environment.
 
@@ -40,7 +80,7 @@ osio {
 }
 ```
 
-### Deploy stand-alone application with external configuration
+#### Deploy stand-alone application with external configuration
 
 The following example build and deploy a nodejs application like previous one.
 It also loads an external resource like `configmap` and deploy it to `stage` and `run` environments.
@@ -125,7 +165,7 @@ items:
     ...
 ```
 
-## How to use this library
+### How to use this library
 
 To use the functions in this library just add the following to the top of your `Jenkinsfile`:
 
@@ -354,8 +394,26 @@ Parameters
 
 NOTE: For oc image, as an optimisation, a new pod is not started instead commands and body are executed on master itself
 
-## Test
+## Contibution Guide
 
+We love contributors. We appriciate contribution in all forms :) - reporting issues, feedback, documentation, code changes, PR's.. etc. 
+
+### Dev Setup
+
+1. Install `maven` (v 3.0 +)
+2. Clone this 
+   ```
+   git clone git@github.com:fabric8io/osio-pipeline.git
+   ```
+4. cd `osio-pipeline`
+3. Import it `maven` project in your favorite IDE. We reccomond Intellije IDEA.
+5. Make changes in code according to following conventions
+    - `vars` -> Provides an end user pipeline API's  
+    - `src`  -> Contains the the code used inside pipeline API's
+    - `test` -> Contains unit tests for all source code
+
+
+### Test
 To run the unit tests, execute
 
 ```
