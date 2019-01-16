@@ -1,10 +1,53 @@
-# OSIO Pipeline [![Build Status](https://travis-ci.org/fabric8io/osio-pipeline.svg?branch=master)](https://travis-ci.org/fabric8io/osio-pipeline)
 
-This git repository contains functions that are used in `Jenkinsfile` to do Continuous Delivery / Continuous Integration for openshift.io.
+# OpenShift Pipeline Library [![Build Status](https://travis-ci.org/fabric8io/osio-pipeline.svg?branch=master)](https://travis-ci.org/fabric8io/osio-pipeline)
 
-## Examples
+<!-- @import "[TOC]" {cmd="toc" depthFrom=1 depthTo=6 orderedList=false} -->
 
-### Deploy stand-alone application
+<!-- code_chunk_output -->
+
+* [OpenShift Pipeline Library ![Build Status](https://travis-ci.org/fabric8io/osio-pipeline)](#openshift-pipeline-library-build-statushttpstravis-ciorgfabric8ioosio-pipelinesvgbranchmasterhttpstravis-ciorgfabric8ioosio-pipeline)
+	* [Overview](#overview)
+	* [Prerequisites](#prerequisites)
+	* [User Guide](#user-guide)
+		* [Examples](#examples)
+			* [Deploy stand-alone application](#deploy-stand-alone-application)
+			* [Deploy stand-alone application with external configuration](#deploy-stand-alone-application-with-external-configuration)
+		* [How to use this library](#how-to-use-this-library)
+	* [API](#api)
+		* [osio](#osio)
+		* [config](#config)
+		* [ci](#ci)
+		* [cd](#cd)
+		* [processTemplate](#processtemplate)
+		* [loadResources](#loadresources)
+		* [build](#build)
+		* [deploy](#deploy)
+		* [spawn](#spawn)
+	* [Contribution Guide](#contribution-guide)
+		* [Dev Setup](#dev-setup)
+		* [Test](#test)
+
+<!-- /code_chunk_output -->
+
+## Overview
+
+This repository provides a set of pipeline functions (pipeline library) that are used in `Jenkinsfile` to do Continuous Delivery / Continuous Integration for OpenShift.io applications.
+This pipeline library can be used with any OpenShift cluster which adheres following [prerequisites](#prerequisites).
+
+## Prerequisites
+ - OpenShift command-line interface (`oc` binary) should be available on Jenkins master or/and slave nodes.
+ - Jenkins should have following set of plugins
+    - [Pipeline Model Definition Plugin](https://wiki.jenkins.io/display/JENKINS/Pipeline+Model+Definition+Plugin)
+    - [Kubernetes Plugin](https://wiki.jenkins.io/display/JENKINS/Kubernetes+Plugin)
+ - Familarity with writing `Jenkinsfile`, basic groovy syntax and Jenkins pipeline.
+
+## User Guide
+
+### Examples
+
+Following are some example `Jenkinsfiles` to illustrate how to use this pipeline library.
+
+#### Deploy stand-alone application
 
 The following example builds a nodejs booster and deploys it to a `stage` environment and then on approval to the `run` environment.
 
@@ -21,17 +64,16 @@ osio {
 
     // performs an s2i build
     build resources: resources
-
   }
 
   cd {
-
     // override the RELEASE_VERSION template parameter
     def resources = processTemplate(params: [
         RELEASE_VERSION: "1.0.${env.BUILD_NUMBER}"
     ])
 
     build resources: resources
+
     deploy resources: resources, env: 'stage'
 
     // wait for user to approve the promotion to "run" environment
@@ -40,7 +82,7 @@ osio {
 }
 ```
 
-### Deploy stand-alone application with external configuration
+#### Deploy stand-alone application with external configuration
 
 The following example build and deploy a nodejs application like previous one.
 It also loads an external resource like `configmap` and deploy it to `stage` and `run` environments.
@@ -53,6 +95,7 @@ osio {
 
     ci {
         def app = processTemplate()
+       
         build app: app
     }
 
@@ -76,47 +119,17 @@ osio {
 where `configmap.yaml` is
 
 ```yaml
-apiVersion: v1
+APIVersion: v1
 kind: ConfigMap
-metadtaa:
+metadata:
     ...
     ...
 ```
 
-`loadResources` API also supports `List` kind like following one
-
-```groovy
-@Library('github.com/fabric8io/osio-pipeline@master') _
-
-osio {
-    config runtime: 'node'
-
-    ci {
-        def app = processTemplate()
-        build app: app
-    }
-
-    cd {
-      def resources = processTemplate(params: [
-        release_version: "1.0.${env.BUILD_NUMBER}"
-      ])
-      def configurations = loadResources(file: "configurations.yaml")
-
-      build resources: resources
-
-      // deploy API takes multiple resources in array form
-      deploy resources: [resources, configurations], env: 'stage'
-
-      // wait for user to approve the promotion to "run" environment
-      deploy resources: [resources, configurations], env: 'run', approval: 'manual'
-    }
-}
-```
-
-where `configurations.yaml` is
+`loadResources` API also supports `List` kind like following one where `configurations.yaml` is
 
 ```yaml
-apiVersion: v1
+APIVersion: v1
 kind: List
 items:
   -kind: ConfigMap
@@ -125,7 +138,7 @@ items:
     ...
 ```
 
-## How to use this library
+### How to use this library
 
 To use the functions in this library just add the following to the top of your `Jenkinsfile`:
 
@@ -150,7 +163,7 @@ This is the first functionality we use in the JenkinsFile. Everything we want to
 
 ### config
 
-This is the api where you provide configurations like runtime or something like global variables. This will be used further by default for spining up pods to execute your commands or your flow.
+This is the API where you provide configurations like runtime or something like global variables. This will be used further by default for spinning up pods to execute your commands or your flow.
 
 ```groovy
     config {
@@ -159,11 +172,11 @@ This is the api where you provide configurations like runtime or something like 
     }
 ```
 
-If above block is configured in your pipeline then everytime the spinned pod will have a container named `node` which having the environments for nodejs8. By default pod will be spinned with basic utilities like `oc`, `git` etc
+If above block is configured in your pipeline then every time the spined pod will have a container named `node` which having the environments for nodejs8. By default pod will be spined with basic utilities like `oc`, `git` etc
 
 ### ci
 
-This is the block which will be executed for continuous integration flow. By default all branches starting with name `PR-` will go through this execution. You can overide by providing a branch name in arguments
+This is the block which will be executed for continuous integration flow. By default all branches starting with name `PR-` will go through this execution. You can override by providing a branch name in arguments
 
 ```groovy
     ci {
@@ -171,7 +184,7 @@ This is the block which will be executed for continuous integration flow. By def
     }
 ```
 
-To overide the default branch for this flow
+To override the default branch for this flow
 
 ```groovy
     ci (branch: 'test'){
@@ -179,7 +192,7 @@ To overide the default branch for this flow
     }
 ```
 
-Parameters
+**Parameters**
 
 |      Name      |  Required  |      Default Value      |                Description                 |
 |----------------|------------|-------------------------|--------------------------------------------|
@@ -187,7 +200,7 @@ Parameters
 
 ### cd
 
-This is the block which will be executed for continuous delivery flow. By default this gets executed for `master` branch. You can overide by providing a branch name in arguments
+This is the block which will be executed for continuous delivery flow. By default this gets executed for `master` branch. You can override by providing a branch name in arguments
 
 ```groovy
     cd {
@@ -195,7 +208,7 @@ This is the block which will be executed for continuous delivery flow. By defaul
     }
 ```
 
-To overide the default branch for this flow
+To override the default branch for this flow
 
 ```groovy
     cd (branch: 'production'){
@@ -203,7 +216,7 @@ To overide the default branch for this flow
     }
 ```
 
-Parameters
+**Parameters**
 
 |      Name      |  Required  |  Default Value |                Description                 |
 |----------------|------------|----------------|--------------------------------------------|
@@ -224,7 +237,7 @@ as `params`.
     )
 ```
 
-Parameters
+**Parameters**
 
 |      Name      |  Required  |         Default Value         |                             Description                 |
 |----------------|------------|-------------------------------|---------------------------------------------------------|
@@ -241,9 +254,7 @@ following values by default. You can override them by passing key value pairs in
 |    SOURCE_REPOSITORY_REF    |  output of `git rev-parse --short HEAD`  |
 |       RELEASE_VERSION       |  output of `git rev-list --count HEAD`   |
 
-NOTE : `processTemplate` API expects a `RELEASE_VERSION` parameter in OpenShift template. This parameter
-is used to tag an image in `build` API and then to refer the same image in `deploy` API while 
-building and deploying an application.
+NOTE : `processTemplate` API expects a `RELEASE_VERSION` parameter in OpenShift template. This parameter is used to tag an image in `build` API and then to refer the same image in `deploy` API while building and deploying an application.
 
 ### loadResources
 
@@ -256,15 +267,16 @@ This API can read multiple resources separated by `---` from the yaml file.
     def resource = loadResources(file: ".openshiftio/app.yaml")
 ```
 
-Parameters
+**Parameters**
 
 |      Name      |  Required  |         Default Value        |                             Description                                |
 |----------------|------------|------------------------------|------------------------------------------------------------------------|
 |      file      |   true     |  none           |    An relative path of resource yaml file.            |
 |      validate  |   false    |  true           |    A validation for resource yaml file.               |                       
+
 ### build
 
-This is the api which is responsible for doing s2i build, generating image and creating imagestream (if not exist)
+This is the API which is responsible for doing s2i build, generating image and creating imagestream (if not exist)
 
 ```groovy
     build resources: resources, namespace: "test", commands: """
@@ -285,19 +297,19 @@ or like
         """
 ```
 
-All the commands and s2i process gets executed in a container according to the environments specified in config api otherwise default.
+All the commands and s2i process gets executed in a container according to the environments specified in config API otherwise default.
 
-Parameters
+**Parameters**
 
 |      Name      |  Required  |   Default Value  |                            Description                               |
 |----------------|------------|------------------|----------------------------------------------------------------------|
-|   resources    |    true    |       null       |  openshift resources at least buildConfig and imageStream resource.  |
+|   resources    |    true    |       null       |  OpenShift resources at least buildConfig and imageStream resource.  |
 |   namespace    |    false   |  user-namespace  |            namespace where you want to perform s2i build             |
 |   commands     |    false   |       null       |            commands you want to execute before s2i build             |
 
 ### deploy
 
-This is the api which is responsible for deploying your application to openshift.
+This is the API which is responsible for deploying your application to OpenShift.
 
 ```groovy
     deploy resources: resources, env: 'stage'
@@ -306,15 +318,14 @@ This is the api which is responsible for deploying your application to openshift
 or like
 
 ```groovy
-#!/usr/bin/groovy
     deploy resources: resources, env: 'run', approval: 'manual', timeout: '15`
 ```
 
-Parameters
+**Parameters**
 
 |      Name      |  Required  |  Default Value |                                   Description                                                  |
 |----------------|------------|----------------|------------------------------------------------------------------------------------------------|
-|   resources    |    true    |      null      |  openshift resources at least deploymentConfig, service, route, tag and imageStream resource.  |
+|   resources    |    true    |      null      |  OpenShift resources at least deploymentConfig, service, route, tag and imageStream resource.  |
 |      env       |    true    |      null      |                  environment where you want to deploy - `run` or `stage`                       |
 |    approval    |    false   |      null      |            if provided `manual` then user will be asked whether to deploy or not                 |
 |    timeout     |    false   |       30       |               time (in minutes) to wait for user input if approval is `manual`                  |
@@ -323,7 +334,7 @@ The route generated after above step will be added as annotation in the pipeline
 
 ### spawn
 
-This is an api to spawn an pod as per requirement and execute the commands in the pod.
+This is an API to spawn an pod as per requirement and execute the commands in the pod.
 
 ```groovy
     spawn (image: 'oc`) {
@@ -343,7 +354,7 @@ or like
 
 Either one of commands or closure needs to be specified.
 
-Parameters
+**Parameters**
 
 |      Name      |  Required  |  Default Value |                       Description                              |
 |----------------|------------|----------------|----------------------------------------------------------------|
@@ -354,11 +365,29 @@ Parameters
 
 NOTE: For oc image, as an optimisation, a new pod is not started instead commands and body are executed on master itself
 
-## Test
+## Contribution Guide
+
+We love contributors. We appreciate contributions in all forms :) - reporting issues, feedback, documentation, code changes, tests.. etc. 
+
+### Dev Setup
+
+1. Install `maven` (v 3.0 +)
+2. Clone this 
+   ```
+   git clone git@github.com:fabric8io/osio-pipeline.git
+   ```
+4. cd `osio-pipeline`
+3. Import it `maven` project in your favorite IDE. We reccomond Intellije IDEA.
+5. Make changes in code according to following conventions
+    - `vars` -> Provides an end user pipeline API's  
+    - `src`  -> Contains the the code used inside pipeline API's
+    - `test` -> Contains unit tests for all source code
+
+
+### Test
 
 To run the unit tests, execute
 
 ```
 mvn test
 ```
-
