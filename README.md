@@ -123,37 +123,7 @@ metadtaa:
     ...
 ```
 
-`loadResources` API also supports `List` kind like following one
-
-```groovy
-@Library('github.com/fabric8io/osio-pipeline@master') _
-
-osio {
-    config runtime: 'node'
-
-    ci {
-        def app = processTemplate()
-        build app: app
-    }
-
-    cd {
-      def resources = processTemplate(params: [
-        release_version: "1.0.${env.BUILD_NUMBER}"
-      ])
-      def configurations = loadResources(file: "configurations.yaml")
-
-      build resources: resources
-
-      // deploy API takes multiple resources in array form
-      deploy resources: [resources, configurations], env: 'stage'
-
-      // wait for user to approve the promotion to "run" environment
-      deploy resources: [resources, configurations], env: 'run', approval: 'manual'
-    }
-}
-```
-
-where `configurations.yaml` is
+`loadResources` API also supports `List` kind like following one where `configurations.yaml` is
 
 ```yaml
 apiVersion: v1
@@ -219,7 +189,7 @@ To overide the default branch for this flow
     }
 ```
 
-Parameters
+#### Parameters
 
 |      Name      |  Required  |      Default Value      |                Description                 |
 |----------------|------------|-------------------------|--------------------------------------------|
@@ -243,7 +213,7 @@ To overide the default branch for this flow
     }
 ```
 
-Parameters
+#### Parameters
 
 |      Name      |  Required  |  Default Value |                Description                 |
 |----------------|------------|----------------|--------------------------------------------|
@@ -264,7 +234,7 @@ as `params`.
     )
 ```
 
-Parameters
+#### Parameters
 
 |      Name      |  Required  |         Default Value         |                             Description                 |
 |----------------|------------|-------------------------------|---------------------------------------------------------|
@@ -296,7 +266,7 @@ This API can read multiple resources separated by `---` from the yaml file.
     def resource = loadResources(file: ".openshiftio/app.yaml")
 ```
 
-Parameters
+#### Parameters
 
 |      Name      |  Required  |         Default Value        |                             Description                                |
 |----------------|------------|------------------------------|------------------------------------------------------------------------|
@@ -327,7 +297,7 @@ or like
 
 All the commands and s2i process gets executed in a container according to the environments specified in config api otherwise default.
 
-Parameters
+#### Parameters
 
 |      Name      |  Required  |   Default Value  |                            Description                               |
 |----------------|------------|------------------|----------------------------------------------------------------------|
@@ -346,11 +316,10 @@ This is the api which is responsible for deploying your application to openshift
 or like
 
 ```groovy
-#!/usr/bin/groovy
     deploy resources: resources, env: 'run', approval: 'manual', timeout: '15`
 ```
 
-Parameters
+#### Parameters
 
 |      Name      |  Required  |  Default Value |                                   Description                                                  |
 |----------------|------------|----------------|------------------------------------------------------------------------------------------------|
@@ -383,7 +352,7 @@ or like
 
 Either one of commands or closure needs to be specified.
 
-Parameters
+#### Parameters
 
 |      Name      |  Required  |  Default Value |                       Description                              |
 |----------------|------------|----------------|----------------------------------------------------------------|
@@ -396,7 +365,7 @@ NOTE: For oc image, as an optimisation, a new pod is not started instead command
 
 ## Contibution Guide
 
-We love contributors. We appriciate contribution in all forms :) - reporting issues, feedback, documentation, code changes, PR's.. etc. 
+We love contributors. We appreciate contributions in all forms :) - reporting issues, feedback, documentation, code changes, tests.. etc. 
 
 ### Dev Setup
 
@@ -414,9 +383,9 @@ We love contributors. We appriciate contribution in all forms :) - reporting iss
 
 
 ### Test
+
 To run the unit tests, execute
 
 ```
 mvn test
 ```
-
