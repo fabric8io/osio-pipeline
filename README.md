@@ -1,11 +1,10 @@
-
 # OpenShift Pipeline Library [![Build Status](https://travis-ci.org/fabric8io/osio-pipeline.svg?branch=master)](https://travis-ci.org/fabric8io/osio-pipeline)
 
 <!-- @import "[TOC]" {cmd="toc" depthFrom=1 depthTo=6 orderedList=false} -->
 
 <!-- code_chunk_output -->
 
-* [OpenShift Pipeline Library ![Build Status](https://travis-ci.org/fabric8io/osio-pipeline)](#openshift-pipeline-library-build-statushttpstravis-ciorgfabric8ioosio-pipelinesvgbranchmasterhttpstravis-ciorgfabric8ioosio-pipeline)
+* [OpenShift Pipeline Library](#overview)
 	* [Overview](#overview)
 	* [Prerequisites](#prerequisites)
 	* [User Guide](#user-guide)
