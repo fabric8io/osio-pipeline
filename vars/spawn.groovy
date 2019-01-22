@@ -9,13 +9,8 @@ def call(Map args = [:], body = null){
 
     def spec = specForImage(args.image, args.version?: 'latest')
 
-    // read if any environment variable is passed via Jenkinsfile calling spwan api directly
-    def envfromJenkinsFile = args.envVar ?: []
-    echo "envfromJenkinsFile:${envfromJenkinsFile}"
-    // read environment variable from spec
-    def envfromSpec = spec.envVar ?: []
-    echo "envfromSpec:${envfromSpec}"
-    def envVar = Utils.mergeResources(envfromJenkinsFile + envfromSpec)
+    // read and merge environment variable passed via spwan api and spec
+    def envVars = mergeEnvs(args.envVar, spec.envVar)
 
     def checkoutScm = args.checkout_scm ?: true
 
@@ -25,7 +20,7 @@ def call(Map args = [:], body = null){
       return
     }
 
-    pod(name: args.image, image: spec.image, shell: spec.shell, envVar: envVar) {
+    pod(name: args.image, image: spec.image, shell: spec.shell, envVars: envVars) {
       if (checkoutScm) {
         checkout scm
       }
@@ -42,6 +37,14 @@ def execute(commands, body) {
   if (body) {
     body()
   }
+}
+
+def mergeEnvs(apiVars, specVars){
+    // read if any environment variable is passed via Jenkinsfile calling spawn api directly
+    def apiEnvVars = apiVars ?: []
+    // read environment variable from spec
+    def specEnvVars = specVars ?: []
+    return Utils.mergeResources(apiEnvVars + specEnvVars)
 }
 
 def specForImage(image, version){
