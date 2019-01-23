@@ -1,3 +1,5 @@
+import io.openshift.Utils;
+
 def call(Map args = [:], body = null){
     if (args.commands == null && body == null) {
         error "Please specify either command or body; aborting ..."
@@ -5,7 +7,6 @@ def call(Map args = [:], body = null){
         return
     }
 
-    def spec = specForImage(args.image, args.version?: 'latest')
     def checkoutScm = args.checkout_scm ?: true
 
     // oc is available on master so don't spawn unnecessarily
@@ -14,7 +15,12 @@ def call(Map args = [:], body = null){
       return
     }
 
-    pod(name: args.image, image: spec.image, shell: spec.shell) {
+    def spec = specForImage(args.image, args.version?: 'latest')
+
+    // read and merge environment variable passed via spwan api and spec
+    def envVars = mergeEnvs(args, spec)
+
+    pod(name: args.image, image: spec.image, shell: spec.shell, envVars: envVars) {
       if (checkoutScm) {
         checkout scm
       }
@@ -31,6 +37,14 @@ def execute(commands, body) {
   if (body) {
     body()
   }
+}
+
+def mergeEnvs(args, spec){
+    // read if any environment variable is passed via Jenkinsfile calling spawn api directly
+    def apiEnvVars = args.envVar ?: []
+    // read environment variable from spec
+    def specEnvVars = spec.envVar ?: []
+    return Utils.mergeResources(apiEnvVars + specEnvVars)
 }
 
 def specForImage(image, version){
@@ -63,11 +77,19 @@ def specForImage(image, version){
     "java": [
       "latest": [
             image: "openshift/jenkins-slave-maven-centos7:v4.0",
-            shell: '/bin/bash'
+            shell: '/bin/bash',
+            envVar: [
+            'MAVEN_OPTS': '-Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn',
+            '_JAVA_OPTIONS': '-Duser.home=/home/jenkins -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Dsun.zip.disableMemoryMapping=true -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m'
+            ],
       ],
       "1.8": [
             image: "openshift/jenkins-slave-maven-centos7:v4.0",
-            shell: '/bin/bash'
+            shell: '/bin/bash',
+            envVar: [
+            'MAVEN_OPTS': '-Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn',
+            '_JAVA_OPTIONS': '-Duser.home=/home/jenkins -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Dsun.zip.disableMemoryMapping=true -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m'
+            ],
       ],
     ],
   ]

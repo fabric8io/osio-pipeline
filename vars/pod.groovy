@@ -2,6 +2,7 @@ import io.openshift.Utils
 
 def call(Map args = [:], body = null) {
     def label = Utils.buildID(env.JOB_NAME, env.BUILD_NUMBER, prefix=args.name)
+    def envVars = processEnvVars(args.envVars)
 
     podTemplate(
       label: label,
@@ -9,7 +10,7 @@ def call(Map args = [:], body = null) {
       serviceAccount: 'jenkins',
       inheritFrom: 'base',
       containers: [
-        slaveTemplate(args.name, args.image, args.shell),
+        slaveTemplate(args.name, args.image, args.shell, envVars),
         jnlpTemplate()
       ],
       volumes: volumes(),
@@ -31,16 +32,29 @@ def volumes() {
   ]
 }
 
-def slaveTemplate(name, image, shell) {
-    containerTemplate(
-        name: name,
-        image: image,
-        command: "$shell -c",
-        args: 'cat',
-        ttyEnabled: true,
-        workingDir: '/home/jenkins/',
-        resourceLimitMemory: '640Mi'
-    )
+def slaveTemplate(name, image, shell, envVars) {
+    if (envVars) {
+      return containerTemplate(
+          name: name,
+          image: image,
+          command: "$shell -c",
+          args: 'cat',
+          ttyEnabled: true,
+          workingDir: '/home/jenkins/',
+          resourceLimitMemory: '640Mi',
+          envVars: envVars
+      )
+    } else {
+      return containerTemplate(
+          name: name,
+          image: image,
+          command: "$shell -c",
+          args: 'cat',
+          ttyEnabled: true,
+          workingDir: '/home/jenkins/',
+          resourceLimitMemory: '640Mi'
+      )
+    }
 }
 
 def jnlpTemplate() {
@@ -53,4 +67,11 @@ def jnlpTemplate() {
         workingDir: '/home/jenkins/',
         resourceLimitMemory: '256Mi'
     )
+}
+
+def processEnvVars(env){
+  envVars = []
+  env.each { e -> envVars << envVar(key: "${e.key}", value: "${e.value[0]}")
+  }
+  return envVars
 }
