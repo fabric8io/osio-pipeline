@@ -7,11 +7,6 @@ def call(Map args = [:], body = null){
         return
     }
 
-    def spec = specForImage(args.image, args.version?: 'latest')
-
-    // read and merge environment variable passed via spwan api and spec
-    def envVars = mergeEnvs(args, spec)
-
     def checkoutScm = args.checkout_scm ?: true
 
     // oc is available on master so don't spawn unnecessarily
@@ -19,6 +14,11 @@ def call(Map args = [:], body = null){
       execute(args.commands, body)
       return
     }
+
+    def spec = specForImage(args.image, args.version?: 'latest')
+
+    // read and merge environment variable passed via spwan api and spec
+    def envVars = mergeEnvs(args, spec)
 
     pod(name: args.image, image: spec.image, shell: spec.shell, envVars: envVars) {
       if (checkoutScm) {
