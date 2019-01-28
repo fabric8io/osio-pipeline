@@ -1,4 +1,8 @@
-import io.openshift.Utils;
+import static io.openshift.Utils.mergeResources
+import static io.openshift.Utils.usersNamespace
+import static io.openshift.Utils.addAnnotationToBuild
+import static io.openshift.Utils.ocApply
+import static io.openshift.Utils.shWithOutput;
 
 def call(Map args = [:]) {
   if (!args.env) {
@@ -10,7 +14,7 @@ def call(Map args = [:]) {
   }
 
   def required = ['ImageStream', 'DeploymentConfig', 'meta']
-  def res = Utils.mergeResources(args.resources)
+  def res = mergeResources(args.resources)
 
   def found = res.keySet()
   def missing = required - found
@@ -28,7 +32,7 @@ def call(Map args = [:]) {
     // Ensure that waiting for approval happen on master so that slave isn't
     // held up waiting for input
     stage("Approve") {
-      askForInput(tag, args.env, args.timeout ?: 30)
+      askForInput tag, args.env, args.timeout ?: 30
     }
   }
 
@@ -39,15 +43,14 @@ def call(Map args = [:]) {
 
   stage("Rollout to ${args.env}") {
     spawn(image: image) {
-      def userNS = Utils.usersNamespace();
+      def userNS = usersNamespace();
       def deployNS = userNS + "-" + args.env;
-
-      tagImageToDeployEnv(deployNS, userNS, res.ImageStream, tag)
-      applyResources(deployNS, res)
-      verifyDeployments(deployNS, res.DeploymentConfig)
-      annotateRoutes(deployNS, args.env, res.Route, tag)
+      deployResource(deployNS, res.DeploymentConfig) {
+        tagImageToDeployEnv deployNS, userNS, res.ImageStream, tag
+        applyResources deployNS, res  
+      }
+      annotateRoutes deployNS, args.env, res.Route, tag
     }
-
   }
 }
 
@@ -66,6 +69,13 @@ def askForInput(String version, String environment, int duration) {
   }
 }
 
+def deployResource(ns, dcs, body) {
+  pauseDeployments ns, dcs
+  body()
+  resumeDeployments ns, dcs
+  verifyDeployments ns, dcs
+}
+
 def tagImageToDeployEnv(ns, userNamespace, imageStreams, tag) {
   imageStreams.each { is ->
     try {
@@ -77,16 +87,43 @@ def tagImageToDeployEnv(ns, userNamespace, imageStreams, tag) {
   }
 }
 
+/* It pause all triggers happening upon config change in DC.
+*  Hence tagging an image, changing DC config does not results into
+*  a immediate deployment rollout.
+*/
+def pauseDeployments(ns, dcs) {
+  dcs.each { dc ->
+    def hasDC = shWithOutput(this, "oc get dc/${dc.metadata.name} -n $ns --ignore-not-found")
+    if(hasDC)
+      shWithOutput(this, "oc rollout pause dc/${dc.metadata.name} -n ${ns}")
+  }
+}
+
 def applyResources(ns, res) {
   def allowed = { e -> !(e.key in ["ImageStream", "BuildConfig", "meta"]) }
   def resources = res.findAll(allowed)
     .collect({ it.value })
-  Utils.ocApply(this, resources, ns)
+  ocApply this, resources, ns
+}
+
+/* It resumes trigger happening upon config change in DC.
+*  Tagging an image or changing DC config, all this config changes
+*  would results into single update rather than rolling an update 
+*  multiple times.
+*/
+def resumeDeployments(ns, dcs) {
+  dcs.each { dc ->
+    try {
+      shWithOutput(this, "oc rollout resume dc/${dc.metadata.name} -n ${ns}")
+    } catch(e) {
+      echo "Skip resuming deployment"
+    }
+  }
 }
 
 def verifyDeployments(ns, dcs) {
   dcs.each { dc ->
-    openshiftVerifyDeployment(depCfg: "${dc.metadata.name}", namespace: "${ns}")
+    sh  "oc rollout status dc/${dc.metadata.name} -n ${ns}"
   }
 }
 
@@ -103,12 +140,12 @@ environmentName: "$env"
 serviceUrls: $svcURLs
 deploymentVersions: $depVersions
 """
-  Utils.addAnnotationToBuild(this, "environment.services.fabric8.io/$ns", annotation)
+  addAnnotationToBuild(this, "environment.services.fabric8.io/$ns", annotation)
 }
 
 def displayRouteURL(ns, route) {
   try {
-    def routeUrl = Utils.shWithOutput(this,
+    def routeUrl = shWithOutput(this,
       "oc get route -n ${ns} ${route.metadata.name} --template 'http://{{.spec.host}}'")
 
     echo "${ns.capitalize()} URL: ${routeUrl}"
