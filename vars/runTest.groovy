@@ -1,4 +1,3 @@
-
 def call(Map args) {
   stage("Run Tests") {
     if (!args.commands) {

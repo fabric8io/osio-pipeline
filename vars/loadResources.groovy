@@ -1,4 +1,4 @@
-import io.openshift.Utils
+import static io.openshift.Utils.shWithOutput
 
 def call(Map args = [:]) {
   def file = args.file
@@ -17,7 +17,7 @@ def call(Map args = [:]) {
 
   def validate = args.validate == false ? false : true
   if (validate) {
-    Utils.shWithOutput(this, "oc apply --dry-run=true --validate=true -f $args.file");
+    shWithOutput(this, "oc apply --dry-run=true --validate=true -f $args.file");
   }
 
   // resources can be:

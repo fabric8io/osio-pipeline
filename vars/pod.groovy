@@ -1,7 +1,7 @@
-import io.openshift.Utils
+import static io.openshift.Utils.buildID
 
 def call(Map args = [:], body = null) {
-    def label = Utils.buildID(env.JOB_NAME, env.BUILD_NUMBER, prefix=args.name)
+    def label = buildID(env.JOB_NAME, env.BUILD_NUMBER, prefix=args.name)
     def envVars = processEnvVars(args.envVars)
 
     podTemplate(
