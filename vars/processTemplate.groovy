@@ -1,4 +1,4 @@
-import io.openshift.Utils
+import static io.openshift.Utils.shWithOutput
 
 def call(args=[:]) {
   def file = args.file ?: ".openshiftio/application.yaml"
@@ -19,7 +19,7 @@ def call(args=[:]) {
   def params = applyDefaults(args.params, paramNames)
 
   def ocParams = params.collect { k,v -> "$k=$v"}.join(' ')
-  def processed = Utils.shWithOutput(this, "oc process -f $file $ocParams -o yaml")
+  def processed = shWithOutput(this, "oc process -f $file $ocParams -o yaml")
 
   def kind = { r -> r.kind }
   def resources = readYaml(text: processed).items.groupBy(kind)
@@ -44,9 +44,9 @@ def applyDefaults(provided=[:], templateParams) {
   }
 
   setParam('SUFFIX_NAME') { "-${env.BRANCH_NAME}".toLowerCase() }
-  setParam('SOURCE_REPOSITORY_REF') { Utils.shWithOutput(this, "git rev-parse --short HEAD") }
-  setParam('SOURCE_REPOSITORY_URL') { Utils.shWithOutput(this, "git config remote.origin.url") }
-  setParam('RELEASE_VERSION') { Utils.shWithOutput(this, "git rev-list --count HEAD") }
+  setParam('SOURCE_REPOSITORY_REF') { shWithOutput(this, "git rev-parse --short HEAD") }
+  setParam('SOURCE_REPOSITORY_URL') { shWithOutput(this, "git config remote.origin.url") }
+  setParam('RELEASE_VERSION') { shWithOutput(this, "git rev-list --count HEAD") }
   return params
 }
 

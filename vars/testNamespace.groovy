@@ -1,5 +1,5 @@
-import io.openshift.Utils;
+import static io.openshift.Utils.usersNamespace
 
 def call() {
-  return Utils.usersNamespace()
+  return usersNamespace()
 }

@@ -1,4 +1,4 @@
-import io.openshift.Utils;
+import static io.openshift.Utils.mergeResources
 
 def call(Map args = [:], body = null){
     if (args.commands == null && body == null) {
@@ -44,7 +44,7 @@ def mergeEnvs(args, spec){
     def apiEnvVars = args.envVar ?: []
     // read environment variable from spec
     def specEnvVars = spec.envVar ?: []
-    return Utils.mergeResources(apiEnvVars + specEnvVars)
+    return mergeResources(apiEnvVars + specEnvVars)
 }
 
 def specForImage(image, version){
