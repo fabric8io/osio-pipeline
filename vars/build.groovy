@@ -54,9 +54,15 @@ def call(Map args) {
 }
 
 def createImageStream(ns, imageStreams) {
-    imageStreams.each { is ->
-      ocApply this, is, ns
+  imageStreams.each { imageStream ->
+    def isName = imageStream.metadata.name
+    def isFound = shWithOutput(this, "oc get is/$isName -n $ns --ignore-not-found")
+    if (!isFound) {
+      ocApply this, imageStream, ns
+    } else {
+      echo "image stream exist ${isName}"
     }
+  }
 }
 
 def buildProject(ns, buildConfigs) {
