@@ -22,6 +22,8 @@
 		* [build](#build)
 		* [deploy](#deploy)
 		* [spawn](#spawn)
+		* [runTest](#runTest)
+		* [testNamespace](#testNamespace)
 	* [Contribution Guide](#contribution-guide)
 		* [Dev Setup](#dev-setup)
 		* [Test](#test)
@@ -100,7 +102,7 @@ osio {
 
     ci {
         def app = processTemplate()
-       
+
         build app: app
     }
 
@@ -277,7 +279,7 @@ This API can read multiple resources separated by `---` from the yaml file.
 |      Name      |  Required  |         Default Value        |                             Description                                |
 |----------------|------------|------------------------------|------------------------------------------------------------------------|
 |      file      |   true     |  none           |    An relative path of resource yaml file.            |
-|      validate  |   false    |  true           |    A validation for resource yaml file.               |                       
+|      validate  |   false    |  true           |    A validation for resource yaml file.               |
 
 ### build
 
@@ -352,9 +354,7 @@ This is an API to spawn an pod as per requirement and execute the commands in th
 or like
 
 ```groovy
-    spawn image: 'oc` commands: """
-              oc version
-          """
+    spawn image: 'java`, commands: "java -version", envVar: ["a":"b", "MAVEN_OPTS": '-Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn']
 ```
 
 Either one of commands or closure needs to be specified.
@@ -367,24 +367,56 @@ Either one of commands or closure needs to be specified.
 |    version     |    false   |     latest     |            version of the environment you want                 |
 |  checkout_scm  |    false   |      true      |    whether you want git code or not for performing commands    |
 |    commands    |    false   |      null      |             commands that you want to execute                  |
+|    envVar      |    false   |      []        |     Environment variables you want to set in the pod           |
 
 NOTE: For oc image, as an optimisation, a new pod is not started instead commands and body are executed on master itself
 
+### runTest
+
+This is an API to run the test in a pod using spawn API internally and execute the commands in the pod.
+
+```groovy
+    runTest commands: """
+              npm install && npm test
+          """
+```
+
+**Parameters**
+
+|      Name      |  Required  |  Default Value |                       Description                              |
+|----------------|------------|----------------|----------------------------------------------------------------|
+|    commands    |    true    |      null      |             commands that you want to execute to run the test  |
+|     image      |    false   |      oc        |       environment you want to run the test in java, node etc.  |
+
+### testNamespace
+
+This is an API returns the namespace to run the test.
+Below is a sample code how it can be used.
+
+```groovy
+    namespace = testNamespace() // you get namespace here and use in your command to specify the namespace
+    integrationTestCmd = "mvn verify integration-test -Dnamespace.use.current=false -Dnamespace.use.existing=${namespace} -Dit.test=*IT"
+    runTest commands: integrationTestCmd
+```
+
+**Parameters**
+No parameters required
+
 ## Contribution Guide
 
-We love contributors. We appreciate contributions in all forms :) - reporting issues, feedback, documentation, code changes, tests.. etc. 
+We love contributors. We appreciate contributions in all forms :) - reporting issues, feedback, documentation, code changes, tests.. etc.
 
 ### Dev Setup
 
 1. Install `maven` (v 3.0 +)
-2. Clone this 
+2. Clone this
    ```
    git clone git@github.com:fabric8io/osio-pipeline.git
    ```
 4. cd `osio-pipeline`
 3. Import it `maven` project in your favorite IDE. We reccomond Intellije IDEA.
 5. Make changes in code according to following conventions
-    - `vars` -> Provides an end user pipeline API's  
+    - `vars` -> Provides an end user pipeline API's
     - `src`  -> Contains the the code used inside pipeline API's
     - `test` -> Contains unit tests for all source code
 
