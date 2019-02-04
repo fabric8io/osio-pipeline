@@ -43,7 +43,7 @@ def mergeEnvs(args, spec){
     // read if any environment variable is passed via Jenkinsfile calling spawn api directly
     def apiEnvVars = args.envVars ?: []
     // read environment variable from spec
-    def specEnvVars = spec.envVar ?: []
+    def specEnvVars = spec.envVars ?: []
     return mergeResources(apiEnvVars + specEnvVars)
 }
 
@@ -78,7 +78,7 @@ def specForImage(image, version){
       "latest": [
             image: "openshift/jenkins-slave-maven-centos7:v4.0",
             shell: '/bin/bash',
-            envVar: [
+            envVars: [
             'MAVEN_OPTS': '-Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn',
             '_JAVA_OPTIONS': '-Duser.home=/home/jenkins -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Dsun.zip.disableMemoryMapping=true -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m'
             ],
@@ -86,7 +86,7 @@ def specForImage(image, version){
       "1.8": [
             image: "openshift/jenkins-slave-maven-centos7:v4.0",
             shell: '/bin/bash',
-            envVar: [
+            envVars: [
             'MAVEN_OPTS': '-Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn',
             '_JAVA_OPTIONS': '-Duser.home=/home/jenkins -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -Dsun.zip.disableMemoryMapping=true -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx192m'
             ],
