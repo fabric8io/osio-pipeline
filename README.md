@@ -354,7 +354,9 @@ This is an API to spawn an pod as per requirement and execute the commands in th
 or like
 
 ```groovy
-    spawn image: 'java`, commands: "java -version", envVar: ["a":"b", "MAVEN_OPTS": '-Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn']
+    spawn image: 'java`,
+          commands: "java -version",
+          envVars: ["a":"b", "MAVEN_OPTS": '-Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn']
 ```
 
 Either one of commands or closure needs to be specified.
@@ -367,7 +369,7 @@ Either one of commands or closure needs to be specified.
 |    version     |    false   |     latest     |            version of the environment you want                 |
 |  checkout_scm  |    false   |      true      |    whether you want git code or not for performing commands    |
 |    commands    |    false   |      null      |             commands that you want to execute                  |
-|    envVar      |    false   |      []        |     Environment variables you want to set in the pod           |
+|    envVars     |    false   |      []        |     Environment variables you want to set in the pod           |
 
 NOTE: For oc image, as an optimisation, a new pod is not started instead commands and body are executed on master itself
 

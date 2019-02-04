@@ -41,7 +41,7 @@ def execute(commands, body) {
 
 def mergeEnvs(args, spec){
     // read if any environment variable is passed via Jenkinsfile calling spawn api directly
-    def apiEnvVars = args.envVar ?: []
+    def apiEnvVars = args.envVars ?: []
     // read environment variable from spec
     def specEnvVars = spec.envVar ?: []
     return mergeResources(apiEnvVars + specEnvVars)
