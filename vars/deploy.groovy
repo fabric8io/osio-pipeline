@@ -126,10 +126,11 @@ def verifyDeployments(ns, dcs) {
     openshift.withCluster() {
       openshift.withProject("${ns}") {
         def latestDeploymentVersion = openshift.selector('dc', "${dc.metadata.name}").object().status.latestVersion
-        def rc = openshift.selector('rc', "${dc.metadata.name}-${latestDeploymentVersion}")
-        rc.untilEach(1) {
-          def rcMap = it.object()
-          rcMap.status.replicas.equals(rcMap.status.readyReplicas)
+        def pods = openshift.selector('pods', [deployment: "${dc.metadata.name}-${latestDeploymentVersion}"])
+        pods.untilEach(1) {
+          it.object().status.containerStatuses.every {
+            it.ready
+          }
         }
       }
     }
