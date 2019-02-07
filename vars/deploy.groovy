@@ -47,7 +47,7 @@ def call(Map args = [:]) {
       def deployNS = userNS + "-" + args.env;
       deployResource(deployNS, res.DeploymentConfig) {
         tagImageToDeployEnv deployNS, userNS, res.ImageStream, tag
-        applyResources deployNS, res  
+        applyResources deployNS, res
       }
       annotateRoutes deployNS, args.env, res.Route, tag
     }
@@ -108,7 +108,7 @@ def applyResources(ns, res) {
 
 /* It resumes trigger happening upon config change in DC.
 *  Tagging an image or changing DC config, all this config changes
-*  would results into single update rather than rolling an update 
+*  would results into single update rather than rolling an update
 *  multiple times.
 */
 def resumeDeployments(ns, dcs) {
@@ -123,7 +123,16 @@ def resumeDeployments(ns, dcs) {
 
 def verifyDeployments(ns, dcs) {
   dcs.each { dc ->
-    sh  "oc rollout status dc/${dc.metadata.name} -n ${ns}"
+    openshift.withCluster() {
+      openshift.withProject("${ns}") {
+        def latestDeploymentVersion = openshift.selector('dc', "${dc.metadata.name}").object().status.latestVersion
+        def rc = openshift.selector('rc', "${dc.metadata.name}-${latestDeploymentVersion}")
+        rc.untilEach(1) {
+          def rcMap = it.object()
+          rcMap.status.replicas.equals(rcMap.status.readyReplicas)
+        }
+      }
+    }
   }
 }
 
