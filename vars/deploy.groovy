@@ -45,7 +45,7 @@ def call(Map args = [:]) {
     spawn(image: image) {
       def userNS = usersNamespace();
       def deployNS = userNS + "-" + args.env;
-      deployResource(deployNS, res.DeploymentConfig) {
+      deployResource(deployNS, res) {
         tagImageToDeployEnv deployNS, userNS, res.ImageStream, tag
         applyResources deployNS, res
       }
@@ -69,11 +69,12 @@ def askForInput(String version, String environment, int duration) {
   }
 }
 
-def deployResource(ns, dcs, body) {
-  pauseDeployments ns, dcs
+def deployResource(ns, res, body) {
+  pauseDeployments ns, res.DeploymentConfig
   body()
-  resumeDeployments ns, dcs
-  verifyDeployments ns, dcs
+  resumeDeployments ns, res.DeploymentConfig
+  verifyDeployments ns, res.DeploymentConfig
+  verifyServices ns, res.Service
 }
 
 def tagImageToDeployEnv(ns, userNamespace, imageStreams, tag) {
@@ -127,10 +128,23 @@ def verifyDeployments(ns, dcs) {
       openshift.withProject("${ns}") {
         def latestDeploymentVersion = openshift.selector('dc', "${dc.metadata.name}").object().status.latestVersion
         def pods = openshift.selector('pods', [deployment: "${dc.metadata.name}-${latestDeploymentVersion}"])
+        echo "Waiting for deployment ${dc.metadata.name} to be ready"
         pods.untilEach(1) {
           it.object().status.containerStatuses.every {
             it.ready
           }
+        }
+      }
+    }
+  }
+}
+
+def verifyServices(ns, svcs) {
+  svcs.each { svc ->
+    openshift.withCluster() {
+      openshift.withProject() {
+        while (!openshift.verifyService(svc.metadata.name)) {
+          echo "Waiting for service ${svc.metadata.name} to be ready"
         }
       }
     }
