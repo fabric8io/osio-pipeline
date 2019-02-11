@@ -58,7 +58,7 @@ def slaveTemplate(name, image, shell, envVars) {
 }
 
 def jnlpTemplate() {
-    def jnlpImage = 'fabric8/jenkins-slave-base-centos7:v2132422'
+    def jnlpImage = 'quay.io/openshift/origin-jenkins-agent-base:v4.0'
 
     return containerTemplate(
         name: 'jnlp',

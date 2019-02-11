@@ -52,31 +52,31 @@ def specForImage(image, version){
   def specs = [
     "node": [
       "latest": [
-            image: "openshift/jenkins-agent-nodejs-8-centos7",
+            image: "openshift/jenkins-agent-nodejs-8-centos7:v3.11",
             shell: '/bin/bash'
         ],
       "8.9": [
-            image: "openshift/jenkins-agent-nodejs-8-centos7",
+            image: "openshift/jenkins-agent-nodejs-8-centos7:v3.11",
             shell: '/bin/bash'
       ],
       "4.6": [
-            image: "openshift/jenkins-slave-nodejs-centos7",
+            image: "openshift/jenkins-slave-nodejs-centos7:v3.11",
             shell: '/bin/bash'
       ],
     ],
     "oc": [
       "latest": [
-            image: "openshift/jenkins-agent-nodejs-8-centos7",
+            image: "openshift/jenkins-agent-nodejs-8-centos7:v3.11",
             shell: '/bin/bash'
       ],
       "3.11": [
-            image: "openshift/jenkins-agent-nodejs-8-centos7",
+            image: "openshift/jenkins-agent-nodejs-8-centos7:v3.11",
             shell: '/bin/bash'
       ],
     ],
     "java": [
       "latest": [
-            image: "openshift/jenkins-slave-maven-centos7:v4.0",
+            image: "openshift/jenkins-slave-maven-centos7:v3.11",
             shell: '/bin/bash',
             envVars: [
             'MAVEN_OPTS': '-Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn',
@@ -84,7 +84,7 @@ def specForImage(image, version){
             ],
       ],
       "1.8": [
-            image: "openshift/jenkins-slave-maven-centos7:v4.0",
+            image: "openshift/jenkins-slave-maven-centos7:v3.11",
             shell: '/bin/bash',
             envVars: [
             'MAVEN_OPTS': '-Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn',
