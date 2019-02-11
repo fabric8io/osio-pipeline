@@ -30,6 +30,7 @@ def call(Map args) {
     if (!image) {
       image = args.commands ? config.runtime() : 'oc'
     }
+    
     def gitURL = shWithOutput(this, "git config remote.origin.url")
     def commitHash = shWithOutput(this, "git rev-parse --short HEAD")
     def status = ""
