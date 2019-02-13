@@ -198,7 +198,7 @@ If above block is configured in your pipeline then every time the spined pod wil
 This is the API where you can provide the configuration related to the plugins. You can provide the configurations as map of key value pairs assigned to a plugin name
 
 ```groovy
-    plugins analytics: ["disabled" : "true", "bar" : "foo"]
+    plugins analytics: ["disabled" : "true"]
 
     plugins foobar: ["foo" : "bar"]
 
@@ -207,7 +207,7 @@ This is the API where you can provide the configuration related to the plugins. 
 or
 
 ```groovy
-    plugins analytics: ["disabled" : "true", "verbosity" : "10"], foobar: ["foo" : "bar"]
+    plugins analytics: ["disabled" : "true"], foobar: ["foo" : "bar"]
 ```
 
 Note : This needs to be specified outside of osio block in Jenkinsfile
