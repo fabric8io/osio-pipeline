@@ -62,8 +62,6 @@ The following example builds a nodejs booster and deploys it to a `stage` enviro
 ```groovy
 @Library('github.com/fabric8io/osio-pipeline@master') _
 
-plugins analytics: ["disabled" : false]
-
 osio {
 
   config runtime: 'node'
@@ -99,8 +97,6 @@ It also loads an external resource like `configmap` and deploy it to `stage` and
 
 ```groovy
 @Library('github.com/fabric8io/osio-pipeline@master') _
-
-plugins analytics: ["disabled" : false]
 
 osio {
     config runtime: 'node'
@@ -212,7 +208,7 @@ or
 
 Note : This needs to be specified outside of osio block in Jenkinsfile
 
-Right now, the library is using the analytics plugins, which is by default enabled but can be configured.
+Right now, the library is using the analytics plugins, which is by default enabled but can be disabled by setting `disabled: true`
 
 ### ci
 
