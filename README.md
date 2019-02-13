@@ -22,6 +22,7 @@
 		* [loadResources](#loadresources)
 		* [build](#build)
 		* [deploy](#deploy)
+        * [environment](#environment)
 		* [spawn](#spawn)
 	* [Contribution Guide](#contribution-guide)
 		* [Dev Setup](#dev-setup)
@@ -80,10 +81,10 @@ osio {
 
     build resources: resources
 
-    deploy resources: resources, env: 'stage'
+    deploy resources: resources, env: environment(type: 'stage')
 
     // wait for user to approve the promotion to "run" environment
-    deploy resources: resources, env: 'run', approval: 'manual'
+    deploy resources: resources, env: environment(type: 'run'), approval: 'manual'
   }
 }
 ```
@@ -111,13 +112,13 @@ osio {
       ])
       def cm = loadResources(file: "configmap.yaml")
 
-      build resources: resources
+      build resources: resources, env: environment(type: 'build')
 
       // deploy API takes multiple resources in array form
-      deploy resources: [resources,  cm], env: 'stage'
+      deploy resources: [resources,  cm], env: environment(type: 'stage')
 
       // wait for user to approve the promotion to "run" environment
-      deploy resources: [resources,  cm], env: 'run', approval: 'manual'
+      deploy resources: [resources,  cm], env: environment(type: 'run'), approval: 'manual'
     }
 }
 ```
@@ -315,7 +316,7 @@ This API can read multiple resources separated by `---` from the yaml file.
 This is the API which is responsible for doing s2i build, generating image and creating imagestream (if not exist)
 
 ```groovy
-    build resources: resources, namespace: "test", commands: """
+    build resources: resources, env: "build-namespace", commands: """
           npm install
           npm test
     """
@@ -327,7 +328,7 @@ or like
     build resources: [
                 [ BuildConfig: resources.BuildConfig],
                 [ImageStream: resources.ImageStream],
-        ], namespace: "test", commands: """
+        ], env: "build-namespace", commands: """
             npm install
             npm test
         """
@@ -340,7 +341,7 @@ All the commands and s2i process gets executed in a container according to the e
 |      Name      |  Required  |   Default Value  |                            Description                               |
 |----------------|------------|------------------|----------------------------------------------------------------------|
 |   resources    |    true    |       null       |  OpenShift resources at least buildConfig and imageStream resource.  |
-|   namespace    |    false   |  user-namespace  |            namespace where you want to perform s2i build             |
+|   env    |    false   |  user-namespace  |            namespace where you want to perform s2i build             |
 |   commands     |    false   |       null       |            commands you want to execute before s2i build             |
 
 ### deploy
@@ -362,11 +363,23 @@ or like
 |      Name      |  Required  |  Default Value |                                   Description                                                  |
 |----------------|------------|----------------|------------------------------------------------------------------------------------------------|
 |   resources    |    true    |      null      |  OpenShift resources at least deploymentConfig, service, route, tag and imageStream resource.  |
-|      env       |    true    |      null      |                  environment where you want to deploy - `run` or `stage`                       |
-|    approval    |    false   |      null      |            if provided `manual` then user will be asked whether to deploy or not               |
-|    timeout     |    false   |       30       |               time (in minutes) to wait for user input if approval is `manual`                 |
+|      env       |    true    |      null      |                  environment or namespace where you want to deploy, #environment API helps to resolve correct namespace                       |
+|    approval    |    false   |      null      |            if provided `manual` then user will be asked whether to deploy or not                 |
+|    timeout     |    false   |       30       |               time (in minutes) to wait for user input if approval is `manual`                  |
 
 The route generated after above step will be added as annotation in the pipeline.
+
+### environment
+
+This API intended to resolve correct namespace based upon `type` of environment. It's usually 
+used with [build](#build) and [deploy](#deploy) API to resolve correct OpenShift namespace (Refer the above examples).
+
+```
+environment type: 'stage' // returns correct namespace
+```
+|      Name      |  Required  |  Default Value |                                   Description                                                  |
+|----------------|------------|----------------|------------------------------------------------------------------------------------------------|
+|   type    |    true    |      null      |  Type of environment to resolve. Possible values are `build`, `stage` and `run` |
 
 ### spawn
 

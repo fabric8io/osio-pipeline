@@ -27,7 +27,6 @@ def call(Map args = [:]) {
     error "Missing mandatory metadata: tag"
   }
 
-
   if (args.approval == 'manual') {
     // Ensure that waiting for approval happen on master so that slave isn't
     // held up waiting for input
@@ -44,12 +43,11 @@ def call(Map args = [:]) {
   stage("Rollout to ${args.env}") {
     spawn(image: image) {
       def userNS = usersNamespace();
-      def deployNS = userNS + "-" + args.env;
-      deployResource(deployNS, res.DeploymentConfig) {
-        tagImageToDeployEnv deployNS, userNS, res.ImageStream, tag
-        applyResources deployNS, res  
+      deployResource(args.env, res.DeploymentConfig) {
+        tagImageToDeployEnv args.env, userNS, res.ImageStream, tag
+        applyResources args.env, res  
       }
-      annotateRoutes deployNS, args.env, res.Route, tag
+      annotateRoutes args.env, res.Route, tag
     }
   }
 }
@@ -127,7 +125,7 @@ def verifyDeployments(ns, dcs) {
   }
 }
 
-def annotateRoutes(ns, env, routes, version) {
+def annotateRoutes(ns, routes, version) {
   if (!routes) {
     return
   }
@@ -136,7 +134,7 @@ def annotateRoutes(ns, env, routes, version) {
   def depVersions = routes.inject(''){ acc, r ->  acc + "\n  ${r.metadata.name}: $version" }
 
   def annotation = """---
-environmentName: "$env"
+environmentName: "$ns"
 serviceUrls: $svcURLs
 deploymentVersions: $depVersions
 """

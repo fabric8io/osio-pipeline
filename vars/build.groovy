@@ -25,7 +25,7 @@ def call(Map args) {
       return
     }
 
-    def namespace = args.namespace ?: usersNamespace(args.osClient)
+    def namespace = args.env ?: usersNamespace(args.osClient)
     def image = args.image
     if (!image) {
       image = args.commands ? config.runtime() : 'oc'
