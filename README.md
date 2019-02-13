@@ -198,7 +198,7 @@ If above block is configured in your pipeline then every time the spined pod wil
 This is the API where you can provide the configuration related to the plugins. You can provide the configurations as map of key value pairs assigned to a plugin name
 
 ```groovy
-    plugins analytics: ["disabled" : "true", "verbosity" : "10"]
+    plugins analytics: ["disabled" : "true", "bar" : "foo"]
 
     plugins foobar: ["foo" : "bar"]
 
@@ -404,7 +404,7 @@ Either one of commands or closure needs to be specified.
 |    version     |    false   |     latest     |            version of the environment you want                 |
 |  checkout_scm  |    false   |      true      |    whether you want git code or not for performing commands    |
 |    commands    |    false   |      null      |             commands that you want to execute                  |
-|    envVars     |    false   |       []       |     Environment variables you want to set in the pod           |
+|    envVars     |    false   |      []        |     Environment variables you want to set in the pod           |
 
 NOTE: For oc image, as an optimisation, a new pod is not started instead commands and body are executed on master itself
 
