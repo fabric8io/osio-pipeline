@@ -15,6 +15,7 @@
 	* [API](#api)
 		* [osio](#osio)
 		* [config](#config)
+		* [plugins](#plugins)
 		* [ci](#ci)
 		* [cd](#cd)
 		* [processTemplate](#processtemplate)
@@ -61,6 +62,8 @@ The following example builds a nodejs booster and deploys it to a `stage` enviro
 ```groovy
 @Library('github.com/fabric8io/osio-pipeline@master') _
 
+plugins analytics: ["disabled" : "false"]
+
 osio {
 
   config runtime: 'node'
@@ -96,6 +99,8 @@ It also loads an external resource like `configmap` and deploy it to `stage` and
 
 ```groovy
 @Library('github.com/fabric8io/osio-pipeline@master') _
+
+plugins analytics: ["disabled" : "false"]
 
 osio {
     config runtime: 'node'
@@ -181,6 +186,34 @@ This is the API where you provide configurations like runtime or something like 
 
 If above block is configured in your pipeline then every time the spined pod will have a container named `node` which having the environments for nodejs8. By default pod will be spined with basic utilities like `oc`, `git` etc
 
+**Variables Configured in Pipeline**
+
+|         Name          |  Required  |  Default Value  |                    Description                      |
+|-----------------------|------------|-----------------|-----------------------------------------------------|
+|        runtime        |   false    |      none       |  runtime of the application ex java, node, go etc.  |
+|        version        |   false    |      none       |             version of the runtime using            |
+
+### plugins
+
+This is the API where you can provide the configuration related to the plugins. You can provide the configurations as map of key value pairs assigned to a plugin name
+
+```groovy
+    plugins analytics: ["disabled" : "true", "verbosity" : "10"]
+
+    plugins foobar: ["foo" : "bar"]
+
+```
+
+or
+
+```groovy
+    plugins analytics: ["disabled" : "true", "verbosity" : "10"], foobar: ["foo" : "bar"]
+```
+
+Note : This needs to be specified outside of osio block in Jenkinsfile
+
+Right now, the library is using the analytics plugins, which is by default enabled but can be configured.
+
 ### ci
 
 This is the block which will be executed for continuous integration flow. By default all branches starting with name `PR-` will go through this execution. You can override by providing a branch name in arguments
@@ -254,6 +287,8 @@ as `params`.
 Following template parameters must be present in the template and is set to the
 following values by default. You can override them by passing key value pairs in params.
 
+**Default Template Parameter**
+
 |              Name           |               Default Value              |
 |-----------------------------|------------------------------------------|
 |         SUFFIX_NAME         |                branch name               |
@@ -278,8 +313,8 @@ This API can read multiple resources separated by `---` from the yaml file.
 
 |      Name      |  Required  |         Default Value        |                             Description                                |
 |----------------|------------|------------------------------|------------------------------------------------------------------------|
-|      file      |   true     |  none           |    An relative path of resource yaml file.            |
-|      validate  |   false    |  true           |    A validation for resource yaml file.               |
+|      file      |   true     |            none              |                 An relative path of resource yaml file.                |
+|      validate  |   false    |            true              |                   A validation for resource yaml file.                 |
 
 ### build
 
@@ -334,8 +369,8 @@ or like
 |----------------|------------|----------------|------------------------------------------------------------------------------------------------|
 |   resources    |    true    |      null      |  OpenShift resources at least deploymentConfig, service, route, tag and imageStream resource.  |
 |      env       |    true    |      null      |                  environment where you want to deploy - `run` or `stage`                       |
-|    approval    |    false   |      null      |            if provided `manual` then user will be asked whether to deploy or not                 |
-|    timeout     |    false   |       30       |               time (in minutes) to wait for user input if approval is `manual`                  |
+|    approval    |    false   |      null      |            if provided `manual` then user will be asked whether to deploy or not               |
+|    timeout     |    false   |       30       |               time (in minutes) to wait for user input if approval is `manual`                 |
 
 The route generated after above step will be added as annotation in the pipeline.
 
@@ -369,7 +404,7 @@ Either one of commands or closure needs to be specified.
 |    version     |    false   |     latest     |            version of the environment you want                 |
 |  checkout_scm  |    false   |      true      |    whether you want git code or not for performing commands    |
 |    commands    |    false   |      null      |             commands that you want to execute                  |
-|    envVars     |    false   |      []        |     Environment variables you want to set in the pod           |
+|    envVars     |    false   |       []       |     Environment variables you want to set in the pod           |
 
 NOTE: For oc image, as an optimisation, a new pod is not started instead commands and body are executed on master itself
 
@@ -385,10 +420,10 @@ This is an API to run the test in a pod using spawn API internally and execute t
 
 **Parameters**
 
-|      Name      |  Required  |  Default Value |                       Description                              |
+|      Name      |  Required  |  Default Value |                         Description                            |
 |----------------|------------|----------------|----------------------------------------------------------------|
-|    commands    |    true    |      null      |             commands that you want to execute to run the test  |
-|     image      |    false   |      oc        |       environment you want to run the test in java, node etc.  |
+|    commands    |    true    |      null      |         commands that you want to execute to run the test      |
+|     image      |    false   |       oc       |      environment you want to run the test in java, node etc.   |
 
 ### testNamespace
 
