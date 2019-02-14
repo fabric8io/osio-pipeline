@@ -15,6 +15,7 @@
 	* [API](#api)
 		* [osio](#osio)
 		* [config](#config)
+		* [plugins](#plugins)
 		* [ci](#ci)
 		* [cd](#cd)
 		* [processTemplate](#processtemplate)
@@ -179,6 +180,34 @@ This is the API where you provide configurations like runtime or something like 
 
 If above block is configured in your pipeline then every time the spined pod will have a container named `node` which having the environments for nodejs8. By default pod will be spined with basic utilities like `oc`, `git` etc
 
+**Variables Configured in Pipeline**
+
+|         Name          |  Required  |  Default Value  |                    Description                      |
+|-----------------------|------------|-----------------|-----------------------------------------------------|
+|        runtime        |   false    |      none       |  runtime of the application ex java, node, go etc.  |
+|        version        |   false    |      none       |             version of the runtime using            |
+
+### plugins
+
+This is the API where you can provide the configuration related to the plugins. You can provide the configurations as map of key value pairs assigned to a plugin name
+
+```groovy
+    plugins analytics: ["disabled" : true]
+
+    plugins foobar: ["foo" : "bar"]
+
+```
+
+or
+
+```groovy
+    plugins analytics: ["disabled" : true], foobar: ["foo" : "bar"]
+```
+
+Note : This needs to be specified outside of osio block in Jenkinsfile
+
+Right now, the library is using the analytics plugins, which is by default enabled but can be disabled by setting `disabled: true`
+
 ### ci
 
 This is the block which will be executed for continuous integration flow. By default all branches starting with name `PR-` will go through this execution. You can override by providing a branch name in arguments
@@ -252,6 +281,8 @@ as `params`.
 Following template parameters must be present in the template and is set to the
 following values by default. You can override them by passing key value pairs in params.
 
+**Default Template Parameter**
+
 |              Name           |               Default Value              |
 |-----------------------------|------------------------------------------|
 |         SUFFIX_NAME         |                branch name               |
@@ -276,8 +307,8 @@ This API can read multiple resources separated by `---` from the yaml file.
 
 |      Name      |  Required  |         Default Value        |                             Description                                |
 |----------------|------------|------------------------------|------------------------------------------------------------------------|
-|      file      |   true     |  none           |    An relative path of resource yaml file.            |
-|      validate  |   false    |  true           |    A validation for resource yaml file.               |
+|      file      |   true     |            none              |                 An relative path of resource yaml file.                |
+|      validate  |   false    |            true              |                   A validation for resource yaml file.                 |
 
 ### build
 
@@ -332,8 +363,8 @@ or like
 |----------------|------------|----------------|------------------------------------------------------------------------------------------------|
 |   resources    |    true    |      null      |  OpenShift resources at least deploymentConfig, service, route, tag and imageStream resource.  |
 |      env       |    true    |      null      |                  environment where you want to deploy - `run` or `stage`                       |
-|    approval    |    false   |      null      |            if provided `manual` then user will be asked whether to deploy or not                 |
-|    timeout     |    false   |       30       |               time (in minutes) to wait for user input if approval is `manual`                  |
+|    approval    |    false   |      null      |            if provided `manual` then user will be asked whether to deploy or not               |
+|    timeout     |    false   |       30       |               time (in minutes) to wait for user input if approval is `manual`                 |
 
 The route generated after above step will be added as annotation in the pipeline.
 
