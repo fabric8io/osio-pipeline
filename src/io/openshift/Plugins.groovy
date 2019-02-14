@@ -8,7 +8,9 @@ class Plugins implements Serializable {
     static def register() {
       // analytics plugins is enabled by default
       Globals.plugins["analytics"] = Globals.plugins["analytics"] ?: [disabled: false]
-      if (Globals.plugins["analytics"].disabled ?: false || !pluginAvailable("bayesian")) {
+
+      def disabled = Globals.plugins["analytics"].disabled ?: false
+      if (disabled || !pluginAvailable("bayesian"))  {
         return
       }
       new analytics().register()
