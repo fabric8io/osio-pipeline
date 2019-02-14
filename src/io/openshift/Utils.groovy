@@ -122,4 +122,9 @@ class Utils {
     }
   }
 
+  // return true if given pluginName is available in Jenkins otherwise false
+  static boolean pluginAvailable(pluginName) {
+    return jenkins.model.Jenkins.instance.getPluginManager().getPlugin(pluginName) ? true : false
+  }
+
 }
