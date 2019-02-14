@@ -25,6 +25,7 @@ def call(Map args) {
       return
     }
 
+    echo "env :" + args.env instanceof 
     def namespace = args.env ?: usersNamespace(args.osClient)
     def image = args.image
     if (!image) {
