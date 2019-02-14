@@ -23,8 +23,6 @@
 		* [build](#build)
 		* [deploy](#deploy)
 		* [spawn](#spawn)
-		* [runTest](#runTest)
-		* [testNamespace](#testNamespace)
 	* [Contribution Guide](#contribution-guide)
 		* [Dev Setup](#dev-setup)
 		* [Test](#test)
@@ -400,40 +398,10 @@ Either one of commands or closure needs to be specified.
 |    version     |    false   |     latest     |            version of the environment you want                 |
 |  checkout_scm  |    false   |      true      |    whether you want git code or not for performing commands    |
 |    commands    |    false   |      null      |             commands that you want to execute                  |
-|    envVars     |    false   |      []        |     Environment variables you want to set in the pod           |
+|    envVars     |    false   |      []        |     environment variables you want to set in the pod           |
+|    stage       |    false   |      null      |      A stage name to appear in UI or Jenkins stage view        |  
 
-NOTE: For oc image, as an optimisation, a new pod is not started instead commands and body are executed on master itself
-
-### runTest
-
-This is an API to run the test in a pod using spawn API internally and execute the commands in the pod.
-
-```groovy
-    runTest commands: """
-              npm install && npm test
-          """
-```
-
-**Parameters**
-
-|      Name      |  Required  |  Default Value |                         Description                            |
-|----------------|------------|----------------|----------------------------------------------------------------|
-|    commands    |    true    |      null      |         commands that you want to execute to run the test      |
-|     image      |    false   |       oc       |      environment you want to run the test in java, node etc.   |
-
-### testNamespace
-
-This is an API returns the namespace to run the test.
-Below is a sample code how it can be used.
-
-```groovy
-    namespace = testNamespace() // you get namespace here and use in your command to specify the namespace
-    integrationTestCmd = "mvn verify integration-test -Dnamespace.use.current=false -Dnamespace.use.existing=${namespace} -Dit.test=*IT"
-    runTest commands: integrationTestCmd
-```
-
-**Parameters**
-No parameters required
+NOTE: For oc image, as an optimization, a new pod is not started instead commands and body are executed on master itself
 
 ## Contribution Guide
 
