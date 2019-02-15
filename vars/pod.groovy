@@ -14,12 +14,21 @@ def call(Map args = [:], body = null) {
         jnlpTemplate()
       ],
       volumes: volumes(),
+      slaveConnectTimeout: 1,
     ) {
-      node (label) {
-        container(name: args.name, shell: args.shell) {
-            body()
-        }
-      }
+      /*try {
+        timeout(time: 30, unit: 'MINUTES') {*/
+          node (label) {
+            container(name: args.name, shell: args.shell) {
+              body()
+            }
+          }
+      /*  }
+      } catch (e) {
+        currentBuild.result = 'FAILED'
+        error "Not able to start a slave pod with label ${label}"
+        Events.emit(["build.end", "build.fail"], [status: status, namespace: namespace])
+      }*/
     }
 }
 
